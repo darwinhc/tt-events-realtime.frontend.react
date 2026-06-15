@@ -8,7 +8,7 @@ import type {
   UpdateEventInput,
 } from '@/domains/events/types/event.types'
 
-const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+const API_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 
 function getErrorMessage(body: unknown, status: number) {
   if (
@@ -96,7 +96,7 @@ export const eventsService = {
       body: JSON.stringify(input),
     }),
   getWebSocketUrl: () => {
-    const configuredUrl = import.meta.env.VITE_WS_URL?.replace(/\/$/, '')
+    const configuredUrl = import.meta.env.VITE_WS_BASE_URL?.replace(/\/$/, '')
     if (configuredUrl) {
       return configuredUrl.endsWith('/ws/events')
         ? configuredUrl
