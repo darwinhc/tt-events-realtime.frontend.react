@@ -64,7 +64,7 @@ export function EventList({
             <div className="flex gap-4">
               <div
                 className={`flex size-12 shrink-0 flex-col items-center justify-center rounded-xl ${
-                  isSelected ? 'bg-black text-white' : 'bg-black/[0.06]'
+                  isSelected ? 'bg-black text-white' : 'bg-black/6'
                 }`}
               >
                 <span className="text-[8px] font-extrabold uppercase tracking-wider">

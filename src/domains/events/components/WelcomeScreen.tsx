@@ -23,7 +23,7 @@ export function WelcomeScreen({ onCreateUser }: WelcomeScreenProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#080b08]/70 p-5 backdrop-blur-md"
       role="dialog"
     >
-      <div className="event-detail-enter w-full max-w-[430px] rounded-[28px] border border-white/10 bg-[#151915] p-7 shadow-[0_40px_100px_-25px_rgba(0,0,0,0.9)] sm:p-9">
+      <div className="event-detail-enter w-full max-w-107.5 rounded-[28px] border border-white/10 bg-[#151915] p-7 shadow-[0_40px_100px_-25px_rgba(0,0,0,0.9)] sm:p-9">
         <span className="grid size-11 place-items-center rounded-2xl bg-lime-300 text-zinc-950 shadow-[0_12px_35px_-15px_rgba(190,242,100,0.6)]">
           <Zap className="size-5 fill-current" />
         </span>
@@ -49,7 +49,7 @@ export function WelcomeScreen({ onCreateUser }: WelcomeScreenProps) {
             <UserRound className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/25" />
             <input
               autoFocus
-              className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.045] pl-11 pr-4 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-lime-300/40"
+              className="h-14 w-full rounded-2xl border border-white/10 bg-white/4.5 pl-11 pr-4 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-lime-300/40"
               id="user-name"
               maxLength={64}
               onChange={(event) => setName(event.target.value)}
