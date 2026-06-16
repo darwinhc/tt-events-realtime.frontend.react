@@ -2,7 +2,8 @@ import {CalendarDays, MapPin, Users} from 'lucide-react'
 import {useTranslation} from 'react-i18next'
 
 import type {EventDetails} from '@/domains/events/types/event.types'
-import {formatEventDate, getEventTimingStatus, getLocationDisplay,} from '@/domains/events/utils/event-formatters'
+import {getEventTimingStatus, getLocationDisplay,} from '@/domains/events/utils/event-formatters'
+import {useEventFormatters} from "@/domains/events/hooks/useEventFormatters.ts";
 
 interface EventListProps {
   events: EventDetails[]
@@ -24,7 +25,7 @@ export function EventList({
                             emptyDescription,
                           }: EventListProps) {
   const {t} = useTranslation()
-
+  const { formatEventDate } = useEventFormatters()
   const resolvedEmptyTitle = emptyTitle ?? t('eventList.empty.title')
   const resolvedEmptyDescription =
     emptyDescription ?? t('eventList.empty.description')

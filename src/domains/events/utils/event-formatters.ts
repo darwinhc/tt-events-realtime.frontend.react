@@ -22,41 +22,6 @@ export function isEventCompleted(
   return getEventTimingStatus(event, now) === 'completed'
 }
 
-export function formatEventDate(value: string | null) {
-  if (!value) {
-    return {month: 'TBD', day: '--', full: 'Date to be defined'}
-  }
-
-  const date = new Date(value)
-  return {
-    month: new Intl.DateTimeFormat('en', {month: 'short'}).format(date),
-    day: new Intl.DateTimeFormat('en', {day: '2-digit'}).format(date),
-    full: new Intl.DateTimeFormat('en', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    }).format(date),
-  }
-}
-
-export function formatEventTime(value: string | null) {
-  if (!value) return 'Time to be defined'
-  return new Intl.DateTimeFormat('en', {
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value))
-}
-
-export function formatDuration(minutes: number) {
-  if (minutes < 60) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`
-  if (minutes % 60 === 0) {
-    const hours = minutes / 60
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`
-  }
-  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
-}
-
 function formatCity(value: string | null) {
   if (!value) return null
   return value.replace(/\b\w/g, (letter) => letter.toUpperCase())

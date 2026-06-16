@@ -1,12 +1,13 @@
 import {Languages} from 'lucide-react'
 import {useTranslation} from 'react-i18next'
+import {LANGUAGE_STORAGE_KEY} from "@/constants.ts";
 
 export function LanguageSwitcher() {
   const {i18n} = useTranslation()
 
   function changeLanguage(language: 'en' | 'de') {
     void i18n.changeLanguage(language)
-    window.localStorage.setItem('events.language', language)
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language)
   }
 
   return (

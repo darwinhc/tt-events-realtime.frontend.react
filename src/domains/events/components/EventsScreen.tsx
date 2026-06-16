@@ -1,294 +1,64 @@
-import {CalendarDays, LoaderCircle, LogOut, Plus, Radio, RefreshCw, Users,} from 'lucide-react'
-import {useEffect, useState} from 'react'
-import {useTranslation} from 'react-i18next'
+import {
+  CalendarDays,
+  LoaderCircle,
+  LogOut,
+  Plus,
+  Radio,
+  RefreshCw,
+  Users,
+} from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
-import {DemoDataNotice} from '@/components/ui/DemoDataNotice'
-import {LanguageSwitcher} from '@/components/ui/LanguageSwitcher'
-import {Button} from '@/components/ui/button'
-import {CreateEventDialog} from '@/domains/events/components/CreateEventDialog'
-import {EditEventDialog} from '@/domains/events/components/EditEventDialog'
-import {EventDetail} from '@/domains/events/components/EventDetail'
-import {EventList} from '@/domains/events/components/EventList'
-import {WelcomeScreen} from '@/domains/events/components/WelcomeScreen'
-import {useEventFilters} from '@/domains/events/hooks/useEventFilters'
-import {useEventsData} from '@/domains/events/hooks/useEventsData'
-import {useEventsRealtime} from '@/domains/events/hooks/useEventsRealtime'
-import {useSessionUser} from '@/domains/events/hooks/useSessionUser'
-import type {CreateEventInput, EditEventInput,} from '@/domains/events/types/event.types'
-import {eventsService} from '@/services/events/events.service'
-
-type EventFilter = 'all' | 'active' | 'joined'
+import { DemoDataNotice } from '@/components/ui/DemoDataNotice.tsx'
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher.tsx'
+import { Button } from '@/components/ui/button.tsx'
+import { CreateEventDialog } from '@/domains/events/components/CreateEventDialog.tsx'
+import { EditEventDialog } from '@/domains/events/components/EditEventDialog.tsx'
+import { EventDetail } from '@/domains/events/components/EventDetail.tsx'
+import { EventList } from '@/domains/events/components/EventList.tsx'
+import { WelcomeScreen } from '@/domains/events/components/WelcomeScreen.tsx'
+import { useEventsController } from '@/domains/events/hooks/useEventsController'
 
 export function EventsScreen() {
+  const { t } = useTranslation()
   const {
-    events,
-    setEvents,
-    selectedId,
-    setSelectedId,
-    joinersByEvent,
-    setJoinersByEvent,
-    loading,
-    error,
-    setError,
-    loadEvents,
-    loadEventJoiners,
-    loadMissingJoiners,
-  } = useEventsData()
-
-  const [busy, setBusy] = useState(false)
-  const [createOpen, setCreateOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [editError, setEditError] = useState<string | null>(null)
-  const [live, setLive] = useState(false)
-  const [eventFilter, setEventFilter] = useState<EventFilter>('all')
-  const [now, setNow] = useState(Date.now)
-
-  const {currentUser, createUser, resetSessionUser} = useSessionUser()
-  const {t} = useTranslation()
-
-  function resetUser() {
-    resetSessionUser()
-    setJoinersByEvent({})
-    setEventFilter('all')
-    setCreateOpen(false)
-    setEditOpen(false)
-  }
-
-  const {
-    joinedEventIds,
-    hasInactiveEvents,
     activeOnly,
+    busy,
+    cancelSelectedEvent,
+    createError,
+    createNewEvent,
+    createOpen,
+    createUser,
+    currentUser,
+    editError,
+    editOpen,
+    emptyDescription,
+    emptyTitle,
+    error,
+    events,
+    hasInactiveEvents,
+    joinedEventIds,
     joinedOnly,
-    visibleEvents,
-    selectedEvent,
-    selectedJoiners,
-  } = useEventFilters({
-    events,
-    selectedId,
-    joinersByEvent,
-    currentUser,
-    eventFilter,
-    now,
-  })
-
-  const sidebarTitle = joinedOnly
-    ? t('events.titles.joinedEvents')
-    : activeOnly
-      ? t('events.titles.activeEvents')
-      : t('events.titles.allEvents')
-
-  const emptyTitle = joinedOnly
-    ? t('events.empty.joinedTitle')
-    : activeOnly
-      ? t('events.empty.activeTitle')
-      : t('events.empty.defaultTitle')
-
-  const emptyDescription = joinedOnly
-    ? t('events.empty.joinedDescription')
-    : activeOnly
-      ? t('events.empty.activeDescription')
-      : t('events.empty.defaultDescription')
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 30_000)
-    return () => window.clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    const requiredEventIds = currentUser
-      ? events.map((event) => event.id)
-      : selectedId
-        ? [selectedId]
-        : []
-    const missingEventIds = requiredEventIds
-      .filter((eventId) => !(eventId in joinersByEvent))
-    if (missingEventIds.length === 0) return
-    const timer = window.setTimeout(
-      () => void loadMissingJoiners(missingEventIds),
-      0,
-    )
-    return () => window.clearTimeout(timer)
-  }, [
-    currentUser,
-    events,
-    joinersByEvent,
-    loadMissingJoiners,
-    selectedId,
-  ])
-
-  useEffect(() => {
-    if (
-      visibleEvents.length > 0 &&
-      !visibleEvents.some((event) => event.id === selectedId)
-    ) {
-      const timer = window.setTimeout(
-        () => setSelectedId(visibleEvents[0].id),
-        0,
-      )
-      return () => window.clearTimeout(timer)
-    }
-  }, [selectedId, setSelectedId, visibleEvents])
-
-  useEventsRealtime({
+    live,
     loadEvents,
-    loadEventJoiners,
-    setEvents,
-    setJoinersByEvent,
-    setLive,
-  })
-
-
-  async function toggleJoin() {
-    if (!selectedEvent || !currentUser) return
-    setBusy(true)
-    try {
-      const joined = selectedJoiners.some(
-        (joiner) => joiner.user_name === currentUser.name,
-      )
-      if (joined) {
-        await eventsService.leave(selectedEvent.id, currentUser.name)
-        setJoinersByEvent((current) => ({
-          ...current,
-          [selectedEvent.id]: selectedJoiners.filter(
-            (joiner) => joiner.user_name !== currentUser.name,
-          ),
-        }))
-
-        setEvents((current) =>
-          current.map((event) =>
-            event.id === selectedEvent.id
-              ? {
-                ...event,
-                joiners_count: Math.max(0, event.joiners_count - 1),
-              }
-              : event,
-          ),
-        )
-      } else {
-        const joinedEvent = await eventsService.join(
-          selectedEvent.id,
-          currentUser.name,
-        )
-
-        setJoinersByEvent((current) => ({
-          ...current,
-          [selectedEvent.id]: selectedJoiners.some(
-            (joiner) => joiner.user_name === currentUser.name,
-          )
-            ? selectedJoiners
-            : [...selectedJoiners, joinedEvent],
-        }))
-
-        setEvents((current) =>
-          current.map((event) =>
-            event.id === selectedEvent.id
-              ? {...event, joiners_count: event.joiners_count + 1}
-              : event,
-          ),
-        )
-      }
-    } catch (actionError) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : t('events.errors.updateEvent'),
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function cancelSelectedEvent() {
-    if (!selectedEvent || !currentUser) return
-
-    setBusy(true)
-
-    try {
-      await eventsService.cancel(selectedEvent.id, currentUser.name)
-      await loadEvents()
-    } catch (actionError) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : t('events.errors.cancelEvent'),
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function restoreSelectedEvent() {
-    if (!selectedEvent || !currentUser) return
-
-    setBusy(true)
-
-    try {
-      await eventsService.uncancel(selectedEvent.id, currentUser.name)
-      await loadEvents(selectedEvent.id)
-    } catch (actionError) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : t('events.errors.restoreEvent'),
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function createNewEvent(input: CreateEventInput) {
-    setBusy(true)
-    setCreateError(null)
-
-    try {
-      if (!currentUser) return
-
-      const createdEvent = await eventsService.create(input, currentUser.name)
-      await loadEvents(createdEvent.id ?? undefined)
-      setCreateOpen(false)
-    } catch (actionError) {
-      setCreateError(
-        actionError instanceof Error
-          ? actionError.message
-          : t('events.errors.createEvent'),
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function updateSelectedEvent(input: EditEventInput) {
-    if (!selectedEvent || !currentUser) return
-
-    setBusy(true)
-    setEditError(null)
-
-    try {
-      await eventsService.updateLocation(
-        selectedEvent.location_id,
-        input.location,
-        currentUser.name,
-      )
-
-      await eventsService.update(
-        selectedEvent.id,
-        input.event,
-        currentUser.name,
-      )
-
-      await loadEvents(selectedEvent.id)
-      setEditOpen(false)
-    } catch (actionError) {
-      setEditError(
-        actionError instanceof Error
-          ? actionError.message
-          : t('events.errors.updateSelectedEvent'),
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
+    loading,
+    now,
+    resetUser,
+    restoreSelectedEvent,
+    selectedEvent,
+    selectedId,
+    selectedJoiners,
+    setCreateError,
+    setCreateOpen,
+    setEditError,
+    setEditOpen,
+    setEventFilter,
+    setSelectedId,
+    sidebarTitle,
+    toggleJoin,
+    updateSelectedEvent,
+    visibleEvents,
+  } = useEventsController()
 
   return (
     <main className="min-h-screen bg-[#0b0e0b] text-white">
@@ -296,7 +66,7 @@ export function EventsScreen() {
         <div className="mx-auto flex h-18 max-w-350 items-center justify-between px-5">
           <div className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-xl bg-lime-300 text-zinc-950">
-              <Users className="size-4.5 fill-current"/>
+              <Users className="size-4.5 fill-current" />
             </span>
 
             <div>
@@ -317,7 +87,7 @@ export function EventsScreen() {
                   : 'border-amber-300/15 bg-amber-300/6 text-amber-300'
               }`}
             >
-              <Radio className="size-3"/>
+              <Radio className="size-3" />
               {live ? t('common.liveSync') : t('common.notConnected')}
             </span>
 
@@ -330,19 +100,15 @@ export function EventsScreen() {
                     setCreateOpen(true)
                   }}
                 >
-                  <Plus className="size-4"/>
+                  <Plus className="size-4" />
                   <span className="hidden sm:inline">
                     {t('common.createEvent')}
                   </span>
-                  <span className="sm:hidden">
-                    {t('common.create')}
-                  </span>
+                  <span className="sm:hidden">{t('common.create')}</span>
                 </Button>
 
-                <div
-                  className="flex items-center gap-2 rounded-full border border-white/10 bg-white/4 p-1 pr-2">
-                  <span
-                    className="grid size-7 place-items-center rounded-full bg-lime-300/10 text-[9px] font-bold text-lime-300">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/4 p-1 pr-2">
+                  <span className="grid size-7 place-items-center rounded-full bg-lime-300/10 text-[9px] font-bold text-lime-300">
                     {currentUser.initials}
                   </span>
 
@@ -357,18 +123,18 @@ export function EventsScreen() {
                     title={t('events.user.changeUser')}
                     type="button"
                   >
-                    <LogOut className="size-3.5"/>
+                    <LogOut className="size-3.5" />
                   </button>
                 </div>
 
-                <LanguageSwitcher/>
+                <LanguageSwitcher />
               </>
             )}
           </div>
         </div>
       </header>
 
-      <DemoDataNotice/>
+      <DemoDataNotice />
 
       <div className="mx-auto grid min-h-[calc(100vh-72px)] max-w-350 lg:grid-cols-[360px_1fr]">
         <aside className="border-r border-white/8 bg-[#f4f4ee] text-black">
@@ -433,11 +199,11 @@ export function EventsScreen() {
 
           {loading ? (
             <div className="flex min-h-90 items-center justify-center">
-              <LoaderCircle className="size-5 animate-spin text-black/25"/>
+              <LoaderCircle className="size-5 animate-spin text-black/25" />
             </div>
           ) : error && events.length === 0 ? (
             <div className="flex min-h-90 flex-col items-center justify-center px-8 text-center">
-              <RefreshCw className="size-5 text-black/25"/>
+              <RefreshCw className="size-5 text-black/25" />
               <p className="mt-4 text-sm font-bold">
                 {t('events.errors.unableToLoadEvents')}
               </p>
@@ -489,7 +255,7 @@ export function EventsScreen() {
             />
           ) : (
             <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
-              <CalendarDays className="size-6 text-white/15"/>
+              <CalendarDays className="size-6 text-white/15" />
               <p className="mt-4 text-sm font-semibold text-white/30">
                 {t('events.selectionPrompt')}
               </p>
@@ -526,9 +292,7 @@ export function EventsScreen() {
         </>
       )}
 
-      {!currentUser && (
-        <WelcomeScreen onCreateUser={createUser}/>
-      )}
+      {!currentUser && <WelcomeScreen onCreateUser={createUser} />}
     </main>
   )
 }

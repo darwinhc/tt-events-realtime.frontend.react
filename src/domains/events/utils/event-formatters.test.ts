@@ -1,9 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
 import {
-  formatDuration,
-  formatEventDate,
-  formatEventTime,
   getEventTimingStatus,
   getLocationDisplay,
   isEventCompleted,
@@ -11,27 +8,6 @@ import {
 import {activeEvent} from '@/test/fixtures'
 
 describe('event formatters', () => {
-  it('formats scheduled dates and undefined dates', () => {
-    expect(formatEventDate(null)).toEqual({
-      month: 'TBD',
-      day: '--',
-      full: 'Date to be defined',
-    })
-    expect(formatEventDate('2026-07-09T16:30:00Z')).toMatchObject({
-      month: 'Jul',
-      day: '09',
-    })
-  })
-
-  it('formats time and duration variants', () => {
-    expect(formatEventTime(null)).toBe('Time to be defined')
-    expect(formatEventTime('2026-07-09T16:30:00Z')).toMatch(/6:30 PM|4:30 PM/)
-    expect(formatDuration(1)).toBe('1 minute')
-    expect(formatDuration(45)).toBe('45 minutes')
-    expect(formatDuration(60)).toBe('1 hour')
-    expect(formatDuration(120)).toBe('2 hours')
-    expect(formatDuration(90)).toBe('1h 30m')
-  })
 
   it('distinguishes upcoming, in-progress, and completed event times', () => {
     const event = {

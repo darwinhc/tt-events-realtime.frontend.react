@@ -5,12 +5,10 @@ import {Button} from '@/components/ui/button'
 import {Card, CardContent} from '@/components/ui/card'
 import type {AppUser, EventDetails, EventJoiner,} from '@/domains/events/types/event.types'
 import {
-  formatDuration,
-  formatEventDate,
-  formatEventTime,
   getEventTimingStatus,
   getLocationDisplay,
 } from '@/domains/events/utils/event-formatters'
+import {useEventFormatters} from "@/domains/events/hooks/useEventFormatters.ts";
 
 interface EventDetailProps {
   event: EventDetails
@@ -25,18 +23,19 @@ interface EventDetailProps {
 }
 
 export function EventDetail({
-                              event,
-                              joiners,
-                              currentUser,
-                              busy,
-                              now,
-                              onJoinToggle,
-                              onCancel,
-                              onEdit,
-                              onRestore,
-                            }: EventDetailProps) {
+    event,
+    joiners,
+    currentUser,
+    busy,
+    now,
+    onJoinToggle,
+    onCancel,
+    onEdit,
+    onRestore,
+  }: EventDetailProps) {
   const {t} = useTranslation()
 
+  const {formatEventDate, formatDuration, formatTime} = useEventFormatters()
   const date = formatEventDate(event.scheduled_at)
   const isOrganizer = event.organizer === currentUser?.name
   const hasJoined = joiners.some(
@@ -79,7 +78,7 @@ export function EventDetail({
     {
       icon: Clock3,
       label: t('eventDetail.details.timeAndDuration'),
-      value: `${formatEventTime(event.scheduled_at)} · ${formatDuration(
+      value: `${formatTime(event.scheduled_at)} · ${formatDuration(
         event.duration_in_minutes,
       )}`,
     },

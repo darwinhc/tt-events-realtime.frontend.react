@@ -3,8 +3,9 @@ import {initReactI18next} from 'react-i18next'
 
 import {de} from '@/i18n/resources/de'
 import {en} from '@/i18n/resources/en'
+import {LANGUAGE_STORAGE_KEY} from "@/constants.ts";
 
-const savedLanguage = window.localStorage.getItem('events-realtime.language')
+const savedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY)
 const browserLanguage = navigator.language.startsWith('de') ? 'de' : 'en'
 
 void i18n.use(initReactI18next).init({
