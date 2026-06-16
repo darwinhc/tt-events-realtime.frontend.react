@@ -448,7 +448,7 @@ describe('EventsScreen', () => {
     )
 
     act(() => socket.onclose?.())
-    expect(await screen.findByText('Connecting')).toBeInTheDocument()
+    expect(await screen.findByText('Not connected')).toBeInTheDocument()
   })
 
   it('applies joiner and location notifications without global reloads', async () => {

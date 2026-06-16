@@ -91,11 +91,6 @@ export function EventsScreen() {
       : t('events.empty.defaultDescription')
 
   useEffect(() => {
-    const timer = window.setTimeout(() => void loadEvents(), 0)
-    return () => window.clearTimeout(timer)
-  }, [loadEvents])
-
-  useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000)
     return () => window.clearInterval(timer)
   }, [])

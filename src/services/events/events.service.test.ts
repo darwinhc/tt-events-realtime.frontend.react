@@ -182,12 +182,12 @@ describe('eventsService', () => {
   })
 
   it('uses a configured WebSocket URL without duplicating the event path', () => {
-    vi.stubEnv('VITE_WS_URL', 'wss://events.example.com')
+    vi.stubEnv('VITE_WS_BASE_URL', 'wss://events.example.com')
     expect(eventsService.getWebSocketUrl()).toBe(
       'wss://events.example.com/ws/events',
     )
 
-    vi.stubEnv('VITE_WS_URL', 'wss://events.example.com/ws/events/')
+    vi.stubEnv('VITE_WS_BASE_URL', 'wss://events.example.com/ws/events/')
     expect(eventsService.getWebSocketUrl()).toBe(
       'wss://events.example.com/ws/events',
     )
