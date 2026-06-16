@@ -1,7 +1,10 @@
-import {useCallback, useEffect, useRef, useState} from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type {EventDetails, EventJoiner,} from '@/domains/events/types/event.types'
-import {eventsService} from '@/services/events/events.service'
+import type {
+    EventDetails,
+    EventJoiner,
+} from '@/domains/events/types/event.types'
+import { eventsService } from '@/services/events/events.service'
 
 export function useEventsData() {
     const eventsRequestRef = useRef<Promise<EventDetails[]> | null>(null)

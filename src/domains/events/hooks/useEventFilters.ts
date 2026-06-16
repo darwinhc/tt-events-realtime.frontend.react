@@ -1,7 +1,11 @@
-import {useMemo} from 'react'
+import { useMemo } from 'react'
 
-import type {AppUser, EventDetails, EventJoiner,} from '@/domains/events/types/event.types'
-import {isEventCompleted} from '@/domains/events/utils/event-formatters'
+import type {
+    AppUser,
+    EventDetails,
+    EventJoiner,
+} from '@/domains/events/types/event.types'
+import { isEventCompleted } from '@/domains/events/utils/event-formatters'
 
 export type EventFilter = 'all' | 'active' | 'joined'
 
