@@ -8,15 +8,15 @@ const savedLanguage = window.localStorage.getItem('events-realtime.language')
 const browserLanguage = navigator.language.startsWith('de') ? 'de' : 'en'
 
 void i18n.use(initReactI18next).init({
-    resources: {
-        en: {translation: en},
-        de: {translation: de},
-    },
-    lng: savedLanguage || browserLanguage,
-    fallbackLng: 'en',
-    interpolation: {
-        escapeValue: false,
-    },
+  resources: {
+    en: {translation: en},
+    de: {translation: de},
+  },
+  lng: savedLanguage || browserLanguage,
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
 })
 
 export {i18n}

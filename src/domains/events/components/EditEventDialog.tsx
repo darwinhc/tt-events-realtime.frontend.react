@@ -1,13 +1,10 @@
-import { CalendarClock, LoaderCircle, X } from 'lucide-react'
-import type { SubmitEventHandler } from 'react'
-import { useTranslation } from 'react-i18next'
+import {CalendarClock, LoaderCircle, X} from 'lucide-react'
+import type {SubmitEventHandler} from 'react'
+import {useTranslation} from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
-import { countryOptions } from '@/domains/events/data/countries'
-import type {
-  EditEventInput,
-  EventDetails,
-} from '@/domains/events/types/event.types'
+import {Button} from '@/components/ui/button'
+import {countryOptions} from '@/domains/events/data/countries'
+import type {EditEventInput, EventDetails,} from '@/domains/events/types/event.types'
 
 interface EditEventDialogProps {
   event: EventDetails
@@ -33,7 +30,7 @@ export function EditEventDialog({
                                   onClose,
                                   onUpdate,
                                 }: EditEventDialogProps) {
-  const { t } = useTranslation()
+  const {t} = useTranslation()
 
   if (!open) return null
 
@@ -55,7 +52,7 @@ export function EditEventDialog({
         nameInput.addEventListener(
           'input',
           () => nameInput.setCustomValidity(''),
-          { once: true },
+          {once: true},
         )
       }
 
@@ -84,11 +81,12 @@ export function EditEventDialog({
       className="fixed inset-0 z-50 flex items-end justify-center overflow-x-hidden bg-black/75 px-3 pb-3 backdrop-blur-sm sm:items-center sm:p-6"
       role="dialog"
     >
-      <div className="event-detail-enter max-h-[95vh] w-full max-w-[min(100%,35rem)] overflow-y-auto overflow-x-hidden rounded-[28px] border border-white/10 bg-[#151915] p-5 shadow-2xl sm:p-8">
+      <div
+        className="event-detail-enter max-h-[95vh] w-full max-w-[min(100%,35rem)] overflow-y-auto overflow-x-hidden rounded-[28px] border border-white/10 bg-[#151915] p-5 shadow-2xl sm:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
             <span className="grid size-10 place-items-center rounded-xl bg-lime-300/10 text-lime-300">
-              <CalendarClock className="size-4" />
+              <CalendarClock className="size-4"/>
             </span>
 
             <h2 className="mt-5 font-display text-3xl font-semibold tracking-[-0.04em]">
@@ -107,7 +105,7 @@ export function EditEventDialog({
             onClick={onClose}
             type="button"
           >
-            <X className="size-4" />
+            <X className="size-4"/>
           </button>
         </div>
 
@@ -271,7 +269,7 @@ export function EditEventDialog({
               disabled={saving}
               type="submit"
             >
-              {saving && <LoaderCircle className="size-4 animate-spin" />}
+              {saving && <LoaderCircle className="size-4 animate-spin"/>}
               {t('editEventDialog.saveChanges')}
             </Button>
           </div>

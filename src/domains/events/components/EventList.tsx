@@ -1,165 +1,162 @@
-import { CalendarDays, MapPin, Users } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import {CalendarDays, MapPin, Users} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 
-import type { EventDetails } from '@/domains/events/types/event.types'
-import {
-    formatEventDate,
-    getEventTimingStatus,
-    getLocationDisplay,
-} from '@/domains/events/utils/event-formatters'
+import type {EventDetails} from '@/domains/events/types/event.types'
+import {formatEventDate, getEventTimingStatus, getLocationDisplay,} from '@/domains/events/utils/event-formatters'
 
 interface EventListProps {
-    events: EventDetails[]
-    joinedEventIds: ReadonlySet<number>
-    selectedId: number | null
-    now: number
-    onSelect: (eventId: number) => void
-    emptyTitle?: string
-    emptyDescription?: string
+  events: EventDetails[]
+  joinedEventIds: ReadonlySet<number>
+  selectedId: number | null
+  now: number
+  onSelect: (eventId: number) => void
+  emptyTitle?: string
+  emptyDescription?: string
 }
 
 export function EventList({
-                              events,
-                              joinedEventIds,
-                              selectedId,
-                              now,
-                              onSelect,
-                              emptyTitle,
-                              emptyDescription,
+                            events,
+                            joinedEventIds,
+                            selectedId,
+                            now,
+                            onSelect,
+                            emptyTitle,
+                            emptyDescription,
                           }: EventListProps) {
-    const { t } = useTranslation()
+  const {t} = useTranslation()
 
-    const resolvedEmptyTitle = emptyTitle ?? t('eventList.empty.title')
-    const resolvedEmptyDescription =
-        emptyDescription ?? t('eventList.empty.description')
+  const resolvedEmptyTitle = emptyTitle ?? t('eventList.empty.title')
+  const resolvedEmptyDescription =
+    emptyDescription ?? t('eventList.empty.description')
 
-    if (events.length === 0) {
-        return (
-            <div className="flex min-h-90 flex-col items-center justify-center px-8 text-center">
-                <div className="grid size-12 place-items-center rounded-2xl bg-black/5 text-black/30">
-                    <CalendarDays className="size-5" />
-                </div>
-
-                <h2 className="mt-4 font-display text-lg font-bold">
-                    {resolvedEmptyTitle}
-                </h2>
-
-                <p className="mt-2 text-sm leading-6 text-black/40">
-                    {resolvedEmptyDescription}
-                </p>
-            </div>
-        )
-    }
-
+  if (events.length === 0) {
     return (
-        <div className="divide-y divide-black/[0.07]">
-            {events.map((event) => {
-                const date = formatEventDate(event.scheduled_at)
-                const location = getLocationDisplay(event)
-                const isSelected = selectedId === event.id
-                const isCanceled = event.status === 'canceled'
-                const hasJoined = joinedEventIds.has(event.id)
-                const timingStatus = getEventTimingStatus(event, now)
-                const isInProgress = !isCanceled && timingStatus === 'in-progress'
-                const isCompleted = !isCanceled && timingStatus === 'completed'
+      <div className="flex min-h-90 flex-col items-center justify-center px-8 text-center">
+        <div className="grid size-12 place-items-center rounded-2xl bg-black/5 text-black/30">
+          <CalendarDays className="size-5"/>
+        </div>
 
-                const statusLabel = isCanceled
-                    ? t('eventList.status.canceled')
-                    : isCompleted
-                        ? t('eventList.status.completed')
-                        : t('eventList.status.inProgress')
+        <h2 className="mt-4 font-display text-lg font-bold">
+          {resolvedEmptyTitle}
+        </h2>
 
-                return (
-                    <button
-                        className={`w-full px-5 py-5 text-left transition-colors ${
-                            isSelected ? 'bg-lime-200' : 'hover:bg-black/[0.035]'
-                        }`}
-                        key={event.id}
-                        onClick={() => onSelect(event.id)}
-                        type="button"
-                    >
-                        <div className="flex gap-4">
-                            <div
-                                className={`flex size-12 shrink-0 flex-col items-center justify-center rounded-xl ${
-                                    isSelected ? 'bg-black text-white' : 'bg-black/6'
-                                }`}
-                            >
+        <p className="mt-2 text-sm leading-6 text-black/40">
+          {resolvedEmptyDescription}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="divide-y divide-black/[0.07]">
+      {events.map((event) => {
+        const date = formatEventDate(event.scheduled_at)
+        const location = getLocationDisplay(event)
+        const isSelected = selectedId === event.id
+        const isCanceled = event.status === 'canceled'
+        const hasJoined = joinedEventIds.has(event.id)
+        const timingStatus = getEventTimingStatus(event, now)
+        const isInProgress = !isCanceled && timingStatus === 'in-progress'
+        const isCompleted = !isCanceled && timingStatus === 'completed'
+
+        const statusLabel = isCanceled
+          ? t('eventList.status.canceled')
+          : isCompleted
+            ? t('eventList.status.completed')
+            : t('eventList.status.inProgress')
+
+        return (
+          <button
+            className={`w-full px-5 py-5 text-left transition-colors ${
+              isSelected ? 'bg-lime-200' : 'hover:bg-black/[0.035]'
+            }`}
+            key={event.id}
+            onClick={() => onSelect(event.id)}
+            type="button"
+          >
+            <div className="flex gap-4">
+              <div
+                className={`flex size-12 shrink-0 flex-col items-center justify-center rounded-xl ${
+                  isSelected ? 'bg-black text-white' : 'bg-black/6'
+                }`}
+              >
                 <span className="text-[8px] font-extrabold uppercase tracking-wider">
                   {date.month}
                 </span>
-                                <strong className="text-lg leading-none">
-                                    {date.day}
-                                </strong>
-                            </div>
+                <strong className="text-lg leading-none">
+                  {date.day}
+                </strong>
+              </div>
 
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-start justify-between gap-3">
-                                    <h3
-                                        className={`truncate text-sm font-extrabold ${
-                                            isCanceled || isCompleted
-                                                ? 'text-black/35 line-through'
-                                                : 'text-black/80'
-                                        }`}
-                                    >
-                                        {event.title}
-                                    </h3>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <h3
+                    className={`truncate text-sm font-extrabold ${
+                      isCanceled || isCompleted
+                        ? 'text-black/35 line-through'
+                        : 'text-black/80'
+                    }`}
+                  >
+                    {event.title}
+                  </h3>
 
-                                    <div className="flex shrink-0 flex-wrap justify-end gap-1">
-                                        {hasJoined && (
-                                            <span className="rounded-full bg-violet-500/10 px-2 py-1 text-[8px] font-bold uppercase text-violet-700">
+                  <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                    {hasJoined && (
+                      <span
+                        className="rounded-full bg-violet-500/10 px-2 py-1 text-[8px] font-bold uppercase text-violet-700">
                         {t('eventList.status.joined')}
                       </span>
-                                        )}
+                    )}
 
-                                        {(isCanceled || isCompleted || isInProgress) && (
-                                            <span
-                                                className={`rounded-full px-2 py-1 text-[8px] font-bold uppercase ${
-                                                    isCanceled
-                                                        ? 'bg-red-500/10 text-red-700'
-                                                        : isCompleted
-                                                            ? 'bg-sky-500/10 text-sky-700'
-                                                            : 'bg-amber-500/10 text-amber-700'
-                                                }`}
-                                            >
+                    {(isCanceled || isCompleted || isInProgress) && (
+                      <span
+                        className={`rounded-full px-2 py-1 text-[8px] font-bold uppercase ${
+                          isCanceled
+                            ? 'bg-red-500/10 text-red-700'
+                            : isCompleted
+                              ? 'bg-sky-500/10 text-sky-700'
+                              : 'bg-amber-500/10 text-amber-700'
+                        }`}
+                      >
                         {statusLabel}
                       </span>
-                                        )}
-                                    </div>
-                                </div>
+                    )}
+                  </div>
+                </div>
 
-                                <div className="mt-2 flex items-start gap-1.5">
-                                    <MapPin className="mt-0.5 size-3 shrink-0 text-black/35" />
+                <div className="mt-2 flex items-start gap-1.5">
+                  <MapPin className="mt-0.5 size-3 shrink-0 text-black/35"/>
 
-                                    <div className="min-w-0">
-                                        <p className="truncate text-[11px] font-semibold text-black/55">
-                                            {location.venue}
-                                        </p>
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-semibold text-black/55">
+                      {location.venue}
+                    </p>
 
-                                        {location.address && (
-                                            <p className="truncate text-[10px] leading-4 text-black/40">
-                                                {location.address}
-                                            </p>
-                                        )}
+                    {location.address && (
+                      <p className="truncate text-[10px] leading-4 text-black/40">
+                        {location.address}
+                      </p>
+                    )}
 
-                                        {location.region && (
-                                            <p className="truncate text-[9px] leading-4 text-black/30">
-                                                {location.region}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
+                    {location.region && (
+                      <p className="truncate text-[9px] leading-4 text-black/30">
+                        {location.region}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-                                <p className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-black/45">
-                                    <Users className="size-3" />
-                                    {t('eventList.joiners.joiningCount', {
-                                        count: event.joiners_count,
-                                    })}
-                                </p>
-                            </div>
-                        </div>
-                    </button>
-                )
-            })}
-        </div>
-    )
+                <p className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-black/45">
+                  <Users className="size-3"/>
+                  {t('eventList.joiners.joiningCount', {
+                    count: event.joiners_count,
+                  })}
+                </p>
+              </div>
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
 }
