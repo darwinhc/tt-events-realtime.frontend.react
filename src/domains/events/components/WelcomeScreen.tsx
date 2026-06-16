@@ -2,6 +2,7 @@ import {ArrowRight, UserRound, Zap} from 'lucide-react'
 import type {SubmitEventHandler} from "react";
 import {useState} from 'react'
 
+import { useTranslation } from 'react-i18next';
 import {Button} from '@/components/ui/button'
 
 interface WelcomeScreenProps {
@@ -9,6 +10,7 @@ interface WelcomeScreenProps {
 }
 
 export function WelcomeScreen({onCreateUser}: WelcomeScreenProps) {
+    const { t } = useTranslation()
     const [name, setName] = useState('')
 
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
@@ -31,13 +33,13 @@ export function WelcomeScreen({onCreateUser}: WelcomeScreenProps) {
         </span>
 
                 <p className="mt-7 text-[9px] font-extrabold uppercase tracking-[0.18em] text-lime-300">
-                    Welcome to Events RealTime
+                  {t('welcome.title')}
                 </p>
                 <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.045em] text-white">
-                    What should we call you?
+                  {t('welcome.question')}
                 </h1>
                 <p className="mt-3 text-sm leading-6 text-white/35">
-                    Your name will identify you when creating or joining events.
+                  {t('welcome.description')}
                 </p>
 
                 <form className="mt-7" onSubmit={handleSubmit}>

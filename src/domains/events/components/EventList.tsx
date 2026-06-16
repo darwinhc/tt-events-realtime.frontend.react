@@ -1,7 +1,12 @@
-import {CalendarDays, MapPin, Users} from 'lucide-react'
+import { CalendarDays, MapPin, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
-import type {EventDetails} from '@/domains/events/types/event.types'
-import {formatEventDate, getEventTimingStatus, getLocationDisplay,} from '@/domains/events/utils/event-formatters'
+import type { EventDetails } from '@/domains/events/types/event.types'
+import {
+    formatEventDate,
+    getEventTimingStatus,
+    getLocationDisplay,
+} from '@/domains/events/utils/event-formatters'
 
 interface EventListProps {
     events: EventDetails[]
@@ -19,18 +24,28 @@ export function EventList({
                               selectedId,
                               now,
                               onSelect,
-                              emptyTitle = 'No events yet',
-                              emptyDescription = 'Events created in the service will appear here automatically.',
+                              emptyTitle,
+                              emptyDescription,
                           }: EventListProps) {
+    const { t } = useTranslation()
+
+    const resolvedEmptyTitle = emptyTitle ?? t('eventList.empty.title')
+    const resolvedEmptyDescription =
+        emptyDescription ?? t('eventList.empty.description')
+
     if (events.length === 0) {
         return (
             <div className="flex min-h-90 flex-col items-center justify-center px-8 text-center">
                 <div className="grid size-12 place-items-center rounded-2xl bg-black/5 text-black/30">
-                    <CalendarDays className="size-5"/>
+                    <CalendarDays className="size-5" />
                 </div>
-                <h2 className="mt-4 font-display text-lg font-bold">{emptyTitle}</h2>
+
+                <h2 className="mt-4 font-display text-lg font-bold">
+                    {resolvedEmptyTitle}
+                </h2>
+
                 <p className="mt-2 text-sm leading-6 text-black/40">
-                    {emptyDescription}
+                    {resolvedEmptyDescription}
                 </p>
             </div>
         )
@@ -47,6 +62,12 @@ export function EventList({
                 const timingStatus = getEventTimingStatus(event, now)
                 const isInProgress = !isCanceled && timingStatus === 'in-progress'
                 const isCompleted = !isCanceled && timingStatus === 'completed'
+
+                const statusLabel = isCanceled
+                    ? t('eventList.status.canceled')
+                    : isCompleted
+                        ? t('eventList.status.completed')
+                        : t('eventList.status.inProgress')
 
                 return (
                     <button
@@ -66,8 +87,11 @@ export function EventList({
                 <span className="text-[8px] font-extrabold uppercase tracking-wider">
                   {date.month}
                 </span>
-                                <strong className="text-lg leading-none">{date.day}</strong>
+                                <strong className="text-lg leading-none">
+                                    {date.day}
+                                </strong>
                             </div>
+
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-3">
                                     <h3
@@ -79,13 +103,14 @@ export function EventList({
                                     >
                                         {event.title}
                                     </h3>
+
                                     <div className="flex shrink-0 flex-wrap justify-end gap-1">
                                         {hasJoined && (
-                                            <span
-                                                className="rounded-full bg-violet-500/10 px-2 py-1 text-[8px] font-bold uppercase text-violet-700">
-                        Joined
+                                            <span className="rounded-full bg-violet-500/10 px-2 py-1 text-[8px] font-bold uppercase text-violet-700">
+                        {t('eventList.status.joined')}
                       </span>
                                         )}
+
                                         {(isCanceled || isCompleted || isInProgress) && (
                                             <span
                                                 className={`rounded-full px-2 py-1 text-[8px] font-bold uppercase ${
@@ -96,26 +121,26 @@ export function EventList({
                                                             : 'bg-amber-500/10 text-amber-700'
                                                 }`}
                                             >
-                        {isCanceled
-                            ? 'Canceled'
-                            : isCompleted
-                                ? 'Completed'
-                                : 'In progress'}
+                        {statusLabel}
                       </span>
                                         )}
                                     </div>
                                 </div>
+
                                 <div className="mt-2 flex items-start gap-1.5">
-                                    <MapPin className="mt-0.5 size-3 shrink-0 text-black/35"/>
+                                    <MapPin className="mt-0.5 size-3 shrink-0 text-black/35" />
+
                                     <div className="min-w-0">
                                         <p className="truncate text-[11px] font-semibold text-black/55">
                                             {location.venue}
                                         </p>
+
                                         {location.address && (
                                             <p className="truncate text-[10px] leading-4 text-black/40">
                                                 {location.address}
                                             </p>
                                         )}
+
                                         {location.region && (
                                             <p className="truncate text-[9px] leading-4 text-black/30">
                                                 {location.region}
@@ -123,10 +148,12 @@ export function EventList({
                                         )}
                                     </div>
                                 </div>
+
                                 <p className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-black/45">
-                                    <Users className="size-3"/>
-                                    {event.joiners_count}{' '}
-                                    {event.joiners_count === 1 ? 'person' : 'people'} joining
+                                    <Users className="size-3" />
+                                    {t('eventList.joiners.joiningCount', {
+                                        count: event.joiners_count,
+                                    })}
                                 </p>
                             </div>
                         </div>

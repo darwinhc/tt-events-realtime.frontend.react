@@ -11,7 +11,7 @@ export function createAppUser(name: string): AppUser {
         .slice(0, 2)
         .toUpperCase()
 
-    return { id: null, name: normalizedName, initials }
+    return {id: null, name: normalizedName, initials}
 }
 
 export function removeSessionUser() {
@@ -50,7 +50,7 @@ export function storeSessionUser(name: string) {
     try {
         window.sessionStorage.setItem(
             USER_SESSION_KEY,
-            JSON.stringify({ name }),
+            JSON.stringify({name}),
         )
     } catch {
         // The in-memory user remains usable when storage is unavailable.

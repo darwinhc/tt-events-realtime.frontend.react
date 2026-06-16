@@ -1,21 +1,23 @@
 import {CalendarDays, LoaderCircle, LogOut, Plus, Radio, RefreshCw, Users,} from 'lucide-react'
 import {useEffect, useState} from 'react'
+import {useTranslation} from 'react-i18next'
 
+import {DemoDataNotice} from '@/components/ui/DemoDataNotice'
+import {LanguageSwitcher} from '@/components/ui/LanguageSwitcher'
 import {Button} from '@/components/ui/button'
 import {CreateEventDialog} from '@/domains/events/components/CreateEventDialog'
 import {EditEventDialog} from '@/domains/events/components/EditEventDialog'
 import {EventDetail} from '@/domains/events/components/EventDetail'
 import {EventList} from '@/domains/events/components/EventList'
 import {WelcomeScreen} from '@/domains/events/components/WelcomeScreen'
-import type {CreateEventInput, EditEventInput} from '@/domains/events/types/event.types'
+import {useEventFilters} from '@/domains/events/hooks/useEventFilters'
+import {useEventsData} from '@/domains/events/hooks/useEventsData'
+import {useEventsRealtime} from '@/domains/events/hooks/useEventsRealtime'
+import {useSessionUser} from '@/domains/events/hooks/useSessionUser'
+import type {CreateEventInput, EditEventInput,} from '@/domains/events/types/event.types'
 import {eventsService} from '@/services/events/events.service'
-import {useEventsRealtime} from "@/domains/events/hooks/useEventsRealtime.ts";
-import {useSessionUser} from "@/domains/events/hooks/useSessionUser.ts";
-import {useEventFilters} from "@/domains/events/hooks/useEventFilters.ts";
-import {useEventsData} from "@/domains/events/hooks/useEventsData.ts";
 
 type EventFilter = 'all' | 'active' | 'joined'
-
 
 export function EventsScreen() {
     const {
@@ -32,17 +34,18 @@ export function EventsScreen() {
         loadEventJoiners,
         loadMissingJoiners,
     } = useEventsData()
+
     const [busy, setBusy] = useState(false)
     const [createOpen, setCreateOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
     const [createError, setCreateError] = useState<string | null>(null)
     const [editError, setEditError] = useState<string | null>(null)
-
     const [live, setLive] = useState(false)
     const [eventFilter, setEventFilter] = useState<EventFilter>('all')
     const [now, setNow] = useState(Date.now)
 
-    const {currentUser, createUser, resetSessionUser,} = useSessionUser()
+    const {currentUser, createUser, resetSessionUser} = useSessionUser()
+    const {t} = useTranslation()
 
     function resetUser() {
         resetSessionUser()
@@ -68,6 +71,24 @@ export function EventsScreen() {
         eventFilter,
         now,
     })
+
+    const sidebarTitle = joinedOnly
+        ? t('events.titles.joinedEvents')
+        : activeOnly
+            ? t('events.titles.activeEvents')
+            : t('events.titles.allEvents')
+
+    const emptyTitle = joinedOnly
+        ? t('events.empty.joinedTitle')
+        : activeOnly
+            ? t('events.empty.activeTitle')
+            : t('events.empty.defaultTitle')
+
+    const emptyDescription = joinedOnly
+        ? t('events.empty.joinedDescription')
+        : activeOnly
+            ? t('events.empty.activeDescription')
+            : t('events.empty.defaultDescription')
 
     useEffect(() => {
         const timer = window.setTimeout(() => void loadEvents(), 0)
@@ -138,6 +159,7 @@ export function EventsScreen() {
                         (joiner) => joiner.user_name !== currentUser.name,
                     ),
                 }))
+
                 setEvents((current) =>
                     current.map((event) =>
                         event.id === selectedEvent.id
@@ -153,6 +175,7 @@ export function EventsScreen() {
                     selectedEvent.id,
                     currentUser.name,
                 )
+
                 setJoinersByEvent((current) => ({
                     ...current,
                     [selectedEvent.id]: selectedJoiners.some(
@@ -161,6 +184,7 @@ export function EventsScreen() {
                         ? selectedJoiners
                         : [...selectedJoiners, joinedEvent],
                 }))
+
                 setEvents((current) =>
                     current.map((event) =>
                         event.id === selectedEvent.id
@@ -173,7 +197,7 @@ export function EventsScreen() {
             setError(
                 actionError instanceof Error
                     ? actionError.message
-                    : 'Could not update the event.',
+                    : t('events.errors.updateEvent'),
             )
         } finally {
             setBusy(false)
@@ -182,7 +206,9 @@ export function EventsScreen() {
 
     async function cancelSelectedEvent() {
         if (!selectedEvent || !currentUser) return
+
         setBusy(true)
+
         try {
             await eventsService.cancel(selectedEvent.id, currentUser.name)
             await loadEvents()
@@ -190,7 +216,7 @@ export function EventsScreen() {
             setError(
                 actionError instanceof Error
                     ? actionError.message
-                    : 'Could not cancel the event.',
+                    : t('events.errors.cancelEvent'),
             )
         } finally {
             setBusy(false)
@@ -199,7 +225,9 @@ export function EventsScreen() {
 
     async function restoreSelectedEvent() {
         if (!selectedEvent || !currentUser) return
+
         setBusy(true)
+
         try {
             await eventsService.uncancel(selectedEvent.id, currentUser.name)
             await loadEvents(selectedEvent.id)
@@ -207,7 +235,7 @@ export function EventsScreen() {
             setError(
                 actionError instanceof Error
                     ? actionError.message
-                    : 'Could not restore the event.',
+                    : t('events.errors.restoreEvent'),
             )
         } finally {
             setBusy(false)
@@ -217,8 +245,10 @@ export function EventsScreen() {
     async function createNewEvent(input: CreateEventInput) {
         setBusy(true)
         setCreateError(null)
+
         try {
             if (!currentUser) return
+
             const createdEvent = await eventsService.create(input, currentUser.name)
             await loadEvents(createdEvent.id ?? undefined)
             setCreateOpen(false)
@@ -226,7 +256,7 @@ export function EventsScreen() {
             setCreateError(
                 actionError instanceof Error
                     ? actionError.message
-                    : 'Could not create the event.',
+                    : t('events.errors.createEvent'),
             )
         } finally {
             setBusy(false)
@@ -235,26 +265,30 @@ export function EventsScreen() {
 
     async function updateSelectedEvent(input: EditEventInput) {
         if (!selectedEvent || !currentUser) return
+
         setBusy(true)
         setEditError(null)
+
         try {
             await eventsService.updateLocation(
                 selectedEvent.location_id,
                 input.location,
                 currentUser.name,
             )
+
             await eventsService.update(
                 selectedEvent.id,
                 input.event,
                 currentUser.name,
             )
+
             await loadEvents(selectedEvent.id)
             setEditOpen(false)
         } catch (actionError) {
             setEditError(
                 actionError instanceof Error
                     ? actionError.message
-                    : 'Could not update the event.',
+                    : t('events.errors.updateSelectedEvent'),
             )
         } finally {
             setBusy(false)
@@ -269,10 +303,13 @@ export function EventsScreen() {
             <span className="grid size-9 place-items-center rounded-xl bg-lime-300 text-zinc-950">
               <Users className="size-4.5 fill-current"/>
             </span>
+
                         <div>
-                            <p className="text-sm font-extrabold tracking-tight">Events real-time</p>
+                            <p className="text-sm font-extrabold tracking-tight">
+                                {t('events.header.title')}
+                            </p>
                             <p className="text-[8px] uppercase tracking-[0.15em] text-white/25">
-                                Events
+                                {t('events.header.subtitle')}
                             </p>
                         </div>
                     </div>
@@ -286,8 +323,9 @@ export function EventsScreen() {
                 }`}
             >
               <Radio className="size-3"/>
-                {live ? 'Live sync' : 'Not connected'}
+                {live ? t('common.liveSync') : t('common.notConnected')}
             </span>
+
                         {currentUser && (
                             <>
                                 <Button
@@ -298,49 +336,57 @@ export function EventsScreen() {
                                     }}
                                 >
                                     <Plus className="size-4"/>
-                                    <span className="hidden sm:inline">Create event</span>
-                                    <span className="sm:hidden">Create</span>
+                                    <span className="hidden sm:inline">
+                    {t('common.createEvent')}
+                  </span>
+                                    <span className="sm:hidden">
+                    {t('common.create')}
+                  </span>
                                 </Button>
+
                                 <div
                                     className="flex items-center gap-2 rounded-full border border-white/10 bg-white/4 p-1 pr-2">
                   <span
                       className="grid size-7 place-items-center rounded-full bg-lime-300/10 text-[9px] font-bold text-lime-300">
                     {currentUser.initials}
                   </span>
+
                                     <span className="hidden text-xs font-semibold sm:block">
                     {currentUser.name}
                   </span>
+
                                     <button
-                                        aria-label="Change user"
+                                        aria-label={t('events.user.changeUser')}
                                         className="grid size-7 place-items-center rounded-full text-white/30 hover:bg-white/10 hover:text-white"
                                         onClick={resetUser}
-                                        title="Change user"
+                                        title={t('events.user.changeUser')}
                                         type="button"
                                     >
                                         <LogOut className="size-3.5"/>
                                     </button>
                                 </div>
+
+                                <LanguageSwitcher/>
                             </>
                         )}
                     </div>
                 </div>
             </header>
 
+            <DemoDataNotice/>
+
             <div className="mx-auto grid min-h-[calc(100vh-72px)] max-w-350 lg:grid-cols-[360px_1fr]">
                 <aside className="border-r border-white/8 bg-[#f4f4ee] text-black">
                     <div className="flex min-h-24 items-end justify-between gap-4 border-b border-black/8 px-5 py-5">
                         <div>
                             <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-black/30">
-                                Event calendar
+                                {t('events.sidebar.calendarLabel')}
                             </p>
                             <h1 className="mt-1 text-2xl font-bold tracking-tight">
-                                {joinedOnly
-                                    ? 'Joined events'
-                                    : activeOnly
-                                        ? 'Active events'
-                                        : 'All events'}
+                                {sidebarTitle}
                             </h1>
                         </div>
+
                         <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-bold text-black/40">
               {visibleEvents.length}
             </span>
@@ -357,8 +403,9 @@ export function EventsScreen() {
                                 onClick={() => setEventFilter('all')}
                                 type="button"
                             >
-                                All
+                                {t('events.filters.all')}
                             </button>
+
                             {hasInactiveEvents && (
                                 <button
                                     className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider transition-colors ${
@@ -369,9 +416,10 @@ export function EventsScreen() {
                                     onClick={() => setEventFilter('active')}
                                     type="button"
                                 >
-                                    Active
+                                    {t('events.filters.active')}
                                 </button>
                             )}
+
                             {currentUser && (
                                 <button
                                     className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider transition-colors ${
@@ -382,7 +430,7 @@ export function EventsScreen() {
                                     onClick={() => setEventFilter('joined')}
                                     type="button"
                                 >
-                                    Joined
+                                    {t('events.filters.joined')}
                                 </button>
                             )}
                         </div>
@@ -395,31 +443,24 @@ export function EventsScreen() {
                     ) : error && events.length === 0 ? (
                         <div className="flex min-h-90 flex-col items-center justify-center px-8 text-center">
                             <RefreshCw className="size-5 text-black/25"/>
-                            <p className="mt-4 text-sm font-bold">Unable to load events</p>
-                            <p className="mt-2 text-xs leading-5 text-black/40">{error}</p>
+                            <p className="mt-4 text-sm font-bold">
+                                {t('events.errors.unableToLoadEvents')}
+                            </p>
+                            <p className="mt-2 text-xs leading-5 text-black/40">
+                                {error}
+                            </p>
+
                             <Button
                                 className="mt-5 rounded-full bg-black text-white"
                                 onClick={() => void loadEvents()}
                             >
-                                Try again
+                                {t('common.tryAgain')}
                             </Button>
                         </div>
                     ) : (
                         <EventList
-                            emptyDescription={
-                                joinedOnly
-                                    ? 'Only events joined by the current user are shown, including canceled and completed events.'
-                                    : activeOnly
-                                        ? 'Canceled and completed events are hidden by the active filter.'
-                                        : 'Events created in the service will appear here automatically.'
-                            }
-                            emptyTitle={
-                                joinedOnly
-                                    ? 'No joined events'
-                                    : activeOnly
-                                        ? 'No active events'
-                                        : 'No events yet'
-                            }
+                            emptyDescription={emptyDescription}
+                            emptyTitle={emptyTitle}
                             events={visibleEvents}
                             joinedEventIds={joinedEventIds}
                             now={now}
@@ -435,6 +476,7 @@ export function EventsScreen() {
                             {error}
                         </p>
                     )}
+
                     {selectedEvent ? (
                         <EventDetail
                             busy={busy}
@@ -454,7 +496,7 @@ export function EventsScreen() {
                         <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
                             <CalendarDays className="size-6 text-white/15"/>
                             <p className="mt-4 text-sm font-semibold text-white/30">
-                                Select an event to see its details.
+                                {t('events.selectionPrompt')}
                             </p>
                         </div>
                     )}
@@ -473,6 +515,7 @@ export function EventsScreen() {
                         open={createOpen}
                         saving={busy}
                     />
+
                     {selectedEvent && (
                         <EditEventDialog
                             error={editError}
@@ -487,6 +530,7 @@ export function EventsScreen() {
                     )}
                 </>
             )}
+
             {!currentUser && (
                 <WelcomeScreen onCreateUser={createUser}/>
             )}
