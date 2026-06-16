@@ -1,5 +1,5 @@
-import { EventsScreen } from '@/domains/events/components/EventsScreen'
+import {EventsScreen} from '@/domains/events/components/EventsScreen'
 
 export default function App() {
-  return <EventsScreen />
+    return <EventsScreen/>
 }

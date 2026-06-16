@@ -3,7 +3,7 @@ import {useEffect} from 'react'
 import type {EventDetails} from '@/domains/events/types/event.types'
 import {eventsService} from '@/services/events/events.service'
 import type {RealtimeNotification, UseEventsRealtimeOptions} from "@/domains/events/types/events-realtime.types.ts";
-import {mergeEventPayload, parseJoiner, isRecord} from "@/domains/events/utils/event-payload.ts";
+import {isRecord, mergeEventPayload, parseJoiner} from "@/domains/events/utils/event-payload.ts";
 
 
 function calcReconnectionTime(reconnectAttempts: number): number {

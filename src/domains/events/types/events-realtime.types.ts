@@ -1,4 +1,3 @@
-
 import type {EventDetails, EventJoiner} from "@/domains/events/types/event.types.ts";
 
 export interface RealtimeNotification {
