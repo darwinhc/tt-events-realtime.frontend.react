@@ -1,15 +1,20 @@
-import {useEffect} from 'react'
+import { useEffect } from 'react'
 
-import type {EventDetails} from '@/domains/events/types/event.types'
-import {eventsService} from '@/services/events/events.service'
-import type {RealtimeNotification, UseEventsRealtimeOptions} from "@/domains/events/types/events-realtime.types.ts";
-import {isRecord, mergeEventPayload, parseJoiner} from "@/domains/events/utils/event-payload.ts";
-
+import type { EventDetails } from '@/domains/events/types/event.types'
+import type {
+  RealtimeNotification,
+  UseEventsRealtimeOptions,
+} from '@/domains/events/types/events-realtime.types'
+import {
+  isRecord,
+  mergeEventPayload,
+  parseJoiner,
+} from '@/domains/events/utils/event-payload'
+import { eventsService } from '@/services/events/events.service'
 
 function calcReconnectionTime(reconnectAttempts: number): number {
-  return Math.min(1000 * 2 ** reconnectAttempts, 15000);
+  return Math.min(1000 * 2 ** reconnectAttempts, 15000)
 }
-
 
 export function useEventsRealtime({
                                     loadEvents,
@@ -23,6 +28,7 @@ export function useEventsRealtime({
     let reconnectTimer: number | null = null
     let reconnectAttempts = 0
     let closedByComponent = false
+    let hasOpenedOnce = false
 
     function scheduleReconnect() {
       if (closedByComponent || reconnectTimer !== null) return
@@ -54,7 +60,7 @@ export function useEventsRealtime({
         setEvents((current) =>
           current.map((event) =>
             event.id === eventId
-              ? {...event, joiners_count: count}
+              ? { ...event, joiners_count: count }
               : event,
           ),
         )
@@ -176,34 +182,54 @@ export function useEventsRealtime({
         return
       }
 
-      socket = new WebSocket(eventsService.getWebSocketUrl())
+      const nextSocket = new WebSocket(eventsService.getWebSocketUrl())
+      socket = nextSocket
 
-      socket.onopen = () => {
+      nextSocket.onopen = () => {
+        if (socket !== nextSocket) return
+
+        const shouldRefresh = hasOpenedOnce || reconnectAttempts > 0
+
+        hasOpenedOnce = true
         reconnectAttempts = 0
         setLive(true)
-        void loadEvents()
+
+        if (shouldRefresh) {
+          void loadEvents()
+        }
       }
 
-      socket.onclose = () => {
+      nextSocket.onclose = () => {
+        if (socket !== nextSocket) return
+
         setLive(false)
         scheduleReconnect()
       }
 
-      socket.onerror = () => {
-        socket?.close()
+      nextSocket.onerror = () => {
+        if (socket !== nextSocket) return
+
+        nextSocket.close()
       }
 
-      socket.onmessage = handleMessage
+      nextSocket.onmessage = (message) => {
+        if (socket !== nextSocket) return
+
+        handleMessage(message)
+      }
     }
 
     function reconnectNow() {
+      if (closedByComponent) return
+
       if (reconnectTimer !== null) {
         window.clearTimeout(reconnectTimer)
         reconnectTimer = null
       }
 
-      socket?.close()
+      const previousSocket = socket
       socket = null
+      previousSocket?.close()
       connect()
     }
 
@@ -221,12 +247,16 @@ export function useEventsRealtime({
 
       if (reconnectTimer !== null) {
         window.clearTimeout(reconnectTimer)
+        reconnectTimer = null
       }
 
       window.removeEventListener('online', reconnectNow)
       window.removeEventListener('offline', handleOffline)
 
-      socket?.close()
+      const currentSocket = socket
+      socket = null
+
+      currentSocket?.close()
     }
   }, [
     loadEventJoiners,
