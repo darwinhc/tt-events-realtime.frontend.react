@@ -1,27 +1,24 @@
-import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import {useEffect, useState} from 'react'
+import {useTranslation} from 'react-i18next'
 
-import { useEventFilters } from '@/domains/events/hooks/useEventFilters.ts'
-import type { EventFilter } from '@/domains/events/hooks/useEventFilters.ts'
-import { useEventsData } from '@/domains/events/hooks/useEventsData.ts'
-import { useEventsRealtime } from '@/domains/events/hooks/useEventsRealtime'
-import { useSessionUser } from '@/domains/events/hooks/useSessionUser.ts'
-import type {
-  CreateEventInput,
-  EditEventInput,
-} from '@/domains/events/types/event.types.ts'
-import { eventsService } from '@/services/events/events.service.ts'
+import type {EventFilter} from '@/domains/events/hooks/useEventFilters.ts'
+import {useEventFilters} from '@/domains/events/hooks/useEventFilters.ts'
+import {useEventsData} from '@/domains/events/hooks/useEventsData.ts'
+import {useEventsRealtime} from '@/domains/events/hooks/useEventsRealtime'
+import {useSessionUser} from '@/domains/events/hooks/useSessionUser.ts'
+import type {CreateEventInput, EditEventInput,} from '@/domains/events/types/event.types.ts'
+import {eventsService} from '@/domains/events/services/events.service.ts'
 
 export function useEventsController() {
   const {
     events,
-    setEvents,
     selectedId,
     setSelectedId,
     joinersByEvent,
-    setJoinersByEvent,
     loading,
     error,
+    live,
+    dispatch,
     setError,
     loadEvents,
     loadEventJoiners,
@@ -33,12 +30,11 @@ export function useEventsController() {
   const [editOpen, setEditOpen] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [editError, setEditError] = useState<string | null>(null)
-  const [live, setLive] = useState(false)
   const [eventFilter, setEventFilter] = useState<EventFilter>('all')
   const [now, setNow] = useState(Date.now)
 
-  const { currentUser, createUser, resetSessionUser } = useSessionUser()
-  const { t } = useTranslation()
+  const {currentUser, createUser, resetSessionUser} = useSessionUser()
+  const {t} = useTranslation()
 
   const {
     joinedEventIds,
@@ -81,30 +77,31 @@ export function useEventsController() {
   }, [])
 
   useEffect(() => {
-    const requiredEventIds = currentUser
+    if (events.length === 0) {
+      return
+    }
+
+    const eventIds = currentUser
       ? events.map((event) => event.id)
       : selectedId
         ? [selectedId]
         : []
 
-    const missingEventIds = requiredEventIds.filter(
-      (eventId) => !(eventId in joinersByEvent),
+    const missingEventIds = eventIds.filter(
+      (eventId) => joinersByEvent[eventId] === undefined,
     )
 
-    if (missingEventIds.length === 0) return
+    if (missingEventIds.length === 0) {
+      return
+    }
 
-    const timer = window.setTimeout(
-      () => void loadMissingJoiners(missingEventIds),
-      0,
-    )
-
-    return () => window.clearTimeout(timer)
+    void loadMissingJoiners(missingEventIds)
   }, [
     currentUser,
     events,
+    selectedId,
     joinersByEvent,
     loadMissingJoiners,
-    selectedId,
   ])
 
   useEffect(() => {
@@ -121,18 +118,14 @@ export function useEventsController() {
   }, [selectedId, setSelectedId, visibleEvents])
 
   useEventsRealtime({
-    events,
-    joinersByEvent,
     loadEvents,
     loadEventJoiners,
-    setEvents,
-    setJoinersByEvent,
-    setLive,
+    dispatch,
   })
 
   function resetUser() {
     resetSessionUser()
-    setJoinersByEvent({})
+    dispatch({type: 'joinersCleared'})
     setEventFilter('all')
     setCreateOpen(false)
     setEditOpen(false)
@@ -151,45 +144,26 @@ export function useEventsController() {
       if (joined) {
         await eventsService.leave(selectedEvent.id, currentUser.name)
 
-        setJoinersByEvent((current) => ({
-          ...current,
-          [selectedEvent.id]: selectedJoiners.filter(
-            (joiner) => joiner.user_name !== currentUser.name,
-          ),
-        }))
-
-        setEvents((current) =>
-          current.map((event) =>
-            event.id === selectedEvent.id
-              ? {
-                  ...event,
-                  joiners_count: Math.max(0, event.joiners_count - 1),
-                }
-              : event,
-          ),
-        )
+        dispatch({
+          type: 'eventJoinerRemoved',
+          payload: {
+            eventId: selectedEvent.id,
+            userName: currentUser.name,
+          },
+        })
       } else {
         const joinedEvent = await eventsService.join(
           selectedEvent.id,
           currentUser.name,
         )
 
-        setJoinersByEvent((current) => ({
-          ...current,
-          [selectedEvent.id]: selectedJoiners.some(
-            (joiner) => joiner.user_name === currentUser.name,
-          )
-            ? selectedJoiners
-            : [...selectedJoiners, joinedEvent],
-        }))
-
-        setEvents((current) =>
-          current.map((event) =>
-            event.id === selectedEvent.id
-              ? { ...event, joiners_count: event.joiners_count + 1 }
-              : event,
-          ),
-        )
+        dispatch({
+          type: 'eventJoinerAdded',
+          payload: {
+            eventId: selectedEvent.id,
+            joiner: joinedEvent,
+          },
+        })
       }
     } catch (actionError) {
       setError(

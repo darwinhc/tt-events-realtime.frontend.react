@@ -1,26 +1,18 @@
-import {
-  CalendarDays,
-  LoaderCircle,
-  LogOut,
-  Plus,
-  Radio,
-  RefreshCw,
-  Users,
-} from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import {CalendarDays, LoaderCircle, LogOut, Plus, Radio, RefreshCw, Users,} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 
-import { DemoDataNotice } from '@/components/ui/DemoDataNotice.tsx'
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher.tsx'
-import { Button } from '@/components/ui/button.tsx'
-import { CreateEventDialog } from '@/domains/events/components/CreateEventDialog.tsx'
-import { EditEventDialog } from '@/domains/events/components/EditEventDialog.tsx'
-import { EventDetail } from '@/domains/events/components/EventDetail.tsx'
-import { EventList } from '@/domains/events/components/EventList.tsx'
-import { WelcomeScreen } from '@/domains/events/components/WelcomeScreen.tsx'
-import { useEventsController } from '@/domains/events/hooks/useEventsController'
+import {DemoDataNotice} from '@/components/ui/DemoDataNotice.tsx'
+import {LanguageSwitcher} from '@/components/ui/LanguageSwitcher.tsx'
+import {Button} from '@/components/ui/button.tsx'
+import {CreateEventDialog} from '@/domains/events/components/CreateEventDialog.tsx'
+import {EditEventDialog} from '@/domains/events/components/EditEventDialog.tsx'
+import {EventDetail} from '@/domains/events/components/EventDetail.tsx'
+import {EventList} from '@/domains/events/components/EventList.tsx'
+import {WelcomeScreen} from '@/domains/events/components/WelcomeScreen.tsx'
+import {useEventsController} from '@/domains/events/hooks/useEventsController'
 
 export function EventsScreen() {
-  const { t } = useTranslation()
+  const {t} = useTranslation()
   const {
     activeOnly,
     busy,
@@ -66,7 +58,7 @@ export function EventsScreen() {
         <div className="mx-auto flex h-18 max-w-350 items-center justify-between px-5">
           <div className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-xl bg-lime-300 text-zinc-950">
-              <Users className="size-4.5 fill-current" />
+              <Users className="size-4.5 fill-current"/>
             </span>
 
             <div>
@@ -87,7 +79,7 @@ export function EventsScreen() {
                   : 'border-amber-300/15 bg-amber-300/6 text-amber-300'
               }`}
             >
-              <Radio className="size-3" />
+              <Radio className="size-3"/>
               {live ? t('common.liveSync') : t('common.notConnected')}
             </span>
 
@@ -100,7 +92,7 @@ export function EventsScreen() {
                     setCreateOpen(true)
                   }}
                 >
-                  <Plus className="size-4" />
+                  <Plus className="size-4"/>
                   <span className="hidden sm:inline">
                     {t('common.createEvent')}
                   </span>
@@ -108,7 +100,8 @@ export function EventsScreen() {
                 </Button>
 
                 <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/4 p-1 pr-2">
-                  <span className="grid size-7 place-items-center rounded-full bg-lime-300/10 text-[9px] font-bold text-lime-300">
+                  <span
+                    className="grid size-7 place-items-center rounded-full bg-lime-300/10 text-[9px] font-bold text-lime-300">
                     {currentUser.initials}
                   </span>
 
@@ -123,18 +116,18 @@ export function EventsScreen() {
                     title={t('events.user.changeUser')}
                     type="button"
                   >
-                    <LogOut className="size-3.5" />
+                    <LogOut className="size-3.5"/>
                   </button>
                 </div>
 
-                <LanguageSwitcher />
+                <LanguageSwitcher/>
               </>
             )}
           </div>
         </div>
       </header>
 
-      <DemoDataNotice />
+      <DemoDataNotice/>
 
       <div className="mx-auto grid min-h-[calc(100vh-72px)] max-w-350 lg:grid-cols-[360px_1fr]">
         <aside className="border-r border-white/8 bg-[#f4f4ee] text-black">
@@ -199,11 +192,11 @@ export function EventsScreen() {
 
           {loading ? (
             <div className="flex min-h-90 items-center justify-center">
-              <LoaderCircle className="size-5 animate-spin text-black/25" />
+              <LoaderCircle className="size-5 animate-spin text-black/25"/>
             </div>
           ) : error && events.length === 0 ? (
             <div className="flex min-h-90 flex-col items-center justify-center px-8 text-center">
-              <RefreshCw className="size-5 text-black/25" />
+              <RefreshCw className="size-5 text-black/25"/>
               <p className="mt-4 text-sm font-bold">
                 {t('events.errors.unableToLoadEvents')}
               </p>
@@ -255,7 +248,7 @@ export function EventsScreen() {
             />
           ) : (
             <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
-              <CalendarDays className="size-6 text-white/15" />
+              <CalendarDays className="size-6 text-white/15"/>
               <p className="mt-4 text-sm font-semibold text-white/30">
                 {t('events.selectionPrompt')}
               </p>
@@ -292,7 +285,7 @@ export function EventsScreen() {
         </>
       )}
 
-      {!currentUser && <WelcomeScreen onCreateUser={createUser} />}
+      {!currentUser && <WelcomeScreen onCreateUser={createUser}/>}
     </main>
   )
 }

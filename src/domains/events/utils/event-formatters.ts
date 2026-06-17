@@ -42,3 +42,52 @@ export function getLocationDisplay(event: EventDetails) {
     venue,
   }
 }
+
+
+export function parseOptionalScheduledAt(
+  dateValue: FormDataEntryValue | null,
+  timeValue: FormDataEntryValue | null,
+): Date | null {
+  if (typeof dateValue !== 'string' || dateValue.trim() === '') {
+    return null
+  }
+
+  const time =
+    typeof timeValue === 'string' && timeValue.trim() !== ''
+      ? timeValue
+      : '00:00'
+
+  const date = new Date(`${dateValue}T${time}`)
+
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  return date
+}
+
+export function toIsoStringOrNull(date: Date | null): string | null {
+  return date === null ? null : date.toISOString()
+}
+
+export function toLocalDateTime(value: string | null | undefined): string {
+  if (!value) return ''
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  const offset = date.getTimezoneOffset() * 60_000
+
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
+}
+
+export function toLocalDateInput(value: string | null | undefined): string {
+  return toLocalDateTime(value).slice(0, 10)
+}
+
+export function toLocalTimeInput(value: string | null | undefined): string {
+  return toLocalDateTime(value).slice(11, 16)
+}

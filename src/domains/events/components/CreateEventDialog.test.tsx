@@ -41,8 +41,12 @@ describe('CreateEventDialog', () => {
       'Community Dinner',
     )
     await user.type(
-      screen.getByLabelText('Date and time'),
-      '2026-08-15T19:00',
+      screen.getByLabelText('Date'),
+      '2026-08-15',
+    )
+    await user.type(
+      screen.getByLabelText('Time'),
+      '19:00',
     )
     await user.clear(screen.getByRole('spinbutton', {name: 'Duration in hours'}))
     await user.type(

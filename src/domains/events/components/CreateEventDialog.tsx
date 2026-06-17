@@ -1,7 +1,8 @@
 import {CalendarPlus, LoaderCircle, X} from 'lucide-react'
-import type {SubmitEventHandler} from 'react'
+import {type SubmitEventHandler, useCallback, useEffect, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 
+import {parseOptionalScheduledAt, toIsoStringOrNull} from '@/domains/events/utils/event-formatters'
 import {Button} from '@/components/ui/button'
 import {countryOptions} from '@/domains/events/data/countries'
 import type {AppUser, CreateEventInput,} from '@/domains/events/types/event.types'
@@ -24,23 +25,75 @@ export function CreateEventDialog({
                                     onCreate,
                                   }: CreateEventDialogProps) {
   const {t} = useTranslation()
+  const [formError, setFormError] = useState<string | null>(null)
+  const formErrorTimerRef = useRef<number | null>(null)
+
+  const clearFormErrorTimer = useCallback(() => {
+    if (formErrorTimerRef.current !== null) {
+      window.clearTimeout(formErrorTimerRef.current)
+      formErrorTimerRef.current = null
+    }
+  }, [])
+
+  const showFormError = useCallback(
+    (message: string) => {
+      clearFormErrorTimer()
+      setFormError(message)
+
+      formErrorTimerRef.current = window.setTimeout(() => {
+        setFormError(null)
+        formErrorTimerRef.current = null
+      }, 5000)
+    },
+    [clearFormErrorTimer],
+  )
+
+  useEffect(() => {
+    return () => {
+      clearFormErrorTimer()
+    }
+  }, [clearFormErrorTimer])
 
   if (!open) return null
+
+  const handleClose = () => {
+    clearFormErrorTimer()
+    setFormError(null)
+    onClose()
+  }
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
 
+    const scheduledAt = parseOptionalScheduledAt(
+      data.get('scheduled_date'),
+      data.get('scheduled_time'),
+    )
+    const durationInMinutes = Math.round(Number(data.get('duration')) * 60)
+    const now = new Date()
+
+    if (
+      scheduledAt !== null &&
+      scheduledAt.getTime() + durationInMinutes * 60 * 1000 < now.getTime()
+    ) {
+      showFormError(t('createEventDialog.errors.eventMustNotEndInPast'))
+      return
+    }
+
+    clearFormErrorTimer()
+    setFormError(null)
+
     onCreate({
-      title: String(data.get('title')),
-      scheduled_at: new Date(String(data.get('scheduled_at'))).toISOString(),
-      duration_in_minutes: Math.round(Number(data.get('duration')) * 60),
+      title: String(data.get('title') ?? '').trim(),
+      scheduled_at: toIsoStringOrNull(scheduledAt),
+      duration_in_minutes: durationInMinutes,
       location: {
-        name: String(data.get('location')),
-        address: String(data.get('address')),
-        country: String(data.get('country')),
-        city: String(data.get('city')),
-        postal_code: String(data.get('postal_code')).trim() || null,
+        name: String(data.get('location') ?? '').trim(),
+        address: String(data.get('address') ?? '').trim(),
+        country: String(data.get('country') ?? '').trim(),
+        city: String(data.get('city') ?? '').trim(),
+        postal_code: String(data.get('postal_code') ?? '').trim() || null,
       },
     })
   }
@@ -74,7 +127,7 @@ export function CreateEventDialog({
             aria-label={t('common.close')}
             className="grid size-9 shrink-0 place-items-center rounded-full border border-white/10 text-white/35 hover:bg-white/10 hover:text-white"
             disabled={saving}
-            onClick={onClose}
+            onClick={handleClose}
             type="button"
           >
             <X className="size-4"/>
@@ -96,18 +149,31 @@ export function CreateEventDialog({
           </label>
 
           <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_160px]">
-            <label className="block">
-              <span className="form-label">
-                {t('createEventDialog.dateAndTime')}
-              </span>
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="form-label">
+                  {t('createEventDialog.date')}
+                </span>
 
-              <input
-                className="form-input"
-                name="scheduled_at"
-                required
-                type="datetime-local"
-              />
-            </label>
+                <input
+                  className="form-input"
+                  name="scheduled_date"
+                  type="date"
+                />
+              </label>
+
+              <label className="block">
+                <span className="form-label">
+                  {t('createEventDialog.time')}
+                </span>
+
+                <input
+                  className="form-input"
+                  name="scheduled_time"
+                  type="time"
+                />
+              </label>
+            </div>
 
             <label className="block">
               <span className="form-label">
@@ -189,7 +255,6 @@ export function CreateEventDialog({
                 maxLength={500}
                 name="address"
                 placeholder={t('createEventDialog.addressPlaceholder')}
-                required
               />
             </label>
 
@@ -207,9 +272,9 @@ export function CreateEventDialog({
             </label>
           </div>
 
-          {error && (
+          {(formError || error) && (
             <p className="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-xs text-red-300">
-              {error}
+              {formError || error}
             </p>
           )}
 
@@ -217,7 +282,7 @@ export function CreateEventDialog({
             <Button
               className="rounded-full text-white/50 hover:bg-white/10 hover:text-white"
               disabled={saving}
-              onClick={onClose}
+              onClick={handleClose}
               type="button"
               variant="ghost"
             >

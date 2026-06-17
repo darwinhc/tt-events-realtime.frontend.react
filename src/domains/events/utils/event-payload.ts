@@ -54,3 +54,25 @@ export function parseJoiner(value: unknown): EventJoiner | null {
     left_at: typeof value.left_at === 'string' ? value.left_at : null,
   }
 }
+
+
+export function groupJoinersByEvent(
+  eventIds: number[],
+  joiners: EventJoiner[],
+): Record<number, EventJoiner[]> {
+  const joinersByEvent: Record<number, EventJoiner[]> = {}
+
+  eventIds.forEach((eventId) => {
+    joinersByEvent[eventId] = []
+  })
+
+  joiners.forEach((joiner) => {
+    if (!joinersByEvent[joiner.event_id]) {
+      joinersByEvent[joiner.event_id] = []
+    }
+
+    joinersByEvent[joiner.event_id].push(joiner)
+  })
+
+  return joinersByEvent
+}

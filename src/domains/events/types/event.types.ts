@@ -5,7 +5,7 @@ export interface EventLocation {
   country: string | null
   city: string | null
   postal_code: string | null
-  coordinates: {
+  coordinates?: {
     latitude: number
     longitude: number
   } | null

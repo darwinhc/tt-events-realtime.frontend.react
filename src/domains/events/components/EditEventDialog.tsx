@@ -1,10 +1,16 @@
 import {CalendarClock, LoaderCircle, X} from 'lucide-react'
-import type {SubmitEventHandler} from 'react'
+import {type SubmitEventHandler, useCallback, useEffect, useRef, useState,} from 'react'
 import {useTranslation} from 'react-i18next'
 
 import {Button} from '@/components/ui/button'
 import {countryOptions} from '@/domains/events/data/countries'
-import type {EditEventInput, EventDetails,} from '@/domains/events/types/event.types'
+import type {EditEventInput, EventDetails} from '@/domains/events/types/event.types'
+import {
+  parseOptionalScheduledAt,
+  toIsoStringOrNull,
+  toLocalDateInput,
+  toLocalTimeInput,
+} from '@/domains/events/utils/event-formatters'
 
 interface EditEventDialogProps {
   event: EventDetails
@@ -13,13 +19,6 @@ interface EditEventDialogProps {
   error: string | null
   onClose: () => void
   onUpdate: (input: EditEventInput) => void
-}
-
-function toLocalDateTime(value: string | null) {
-  if (!value) return ''
-  const date = new Date(value)
-  const offset = date.getTimezoneOffset() * 60_000
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
 }
 
 export function EditEventDialog({
@@ -31,15 +30,65 @@ export function EditEventDialog({
                                   onUpdate,
                                 }: EditEventDialogProps) {
   const {t} = useTranslation()
+  const [formError, setFormError] = useState<string | null>(null)
+  const formErrorTimerRef = useRef<number | null>(null)
+
+  const clearFormErrorTimer = useCallback(() => {
+    if (formErrorTimerRef.current !== null) {
+      window.clearTimeout(formErrorTimerRef.current)
+      formErrorTimerRef.current = null
+    }
+  }, [])
+
+  const showFormError = useCallback(
+    (message: string) => {
+      clearFormErrorTimer()
+      setFormError(message)
+
+      formErrorTimerRef.current = window.setTimeout(() => {
+        setFormError(null)
+        formErrorTimerRef.current = null
+      }, 5000)
+    },
+    [clearFormErrorTimer],
+  )
+
+  useEffect(() => {
+    return () => {
+      clearFormErrorTimer()
+    }
+  }, [clearFormErrorTimer])
 
   if (!open) return null
 
+  const handleClose = () => {
+    clearFormErrorTimer()
+    setFormError(null)
+    onClose()
+  }
+
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = (submitEvent) => {
     submitEvent.preventDefault()
+
     const data = new FormData(submitEvent.currentTarget)
-    const scheduledAt = String(data.get('scheduled_at'))
-    const name = String(data.get('location')).trim()
-    const address = String(data.get('address')).trim()
+
+    const scheduledAt = parseOptionalScheduledAt(
+      data.get('scheduled_date'),
+      data.get('scheduled_time'),
+    )
+
+    const durationInMinutes = Math.round(Number(data.get('duration')) * 60)
+
+    if (
+      scheduledAt !== null &&
+      scheduledAt.getTime() + durationInMinutes * 60 * 1000 < Date.now()
+    ) {
+      showFormError(t('editEventDialog.errors.eventMustNotEndInPast'))
+      return
+    }
+
+    const name = String(data.get('location') ?? '').trim()
+    const address = String(data.get('address') ?? '').trim()
 
     if (!name && !address) {
       const nameInput = submitEvent.currentTarget.elements.namedItem('location')
@@ -59,18 +108,21 @@ export function EditEventDialog({
       return
     }
 
+    clearFormErrorTimer()
+    setFormError(null)
+
     onUpdate({
       event: {
-        title: String(data.get('title')).trim(),
-        scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
-        duration_in_minutes: Math.round(Number(data.get('duration')) * 60),
+        title: String(data.get('title') ?? '').trim(),
+        scheduled_at: toIsoStringOrNull(scheduledAt),
+        duration_in_minutes: durationInMinutes,
       },
       location: {
         name: name || null,
         address: address || null,
-        country: String(data.get('country')).trim() || null,
-        city: String(data.get('city')).trim() || null,
-        postal_code: String(data.get('postal_code')).trim() || null,
+        country: String(data.get('country') ?? '').trim() || null,
+        city: String(data.get('city') ?? '').trim() || null,
+        postal_code: String(data.get('postal_code') ?? '').trim() || null,
       },
     })
   }
@@ -102,7 +154,7 @@ export function EditEventDialog({
             aria-label={t('common.close')}
             className="grid size-9 shrink-0 place-items-center rounded-full border border-white/10 text-white/35 hover:bg-white/10 hover:text-white"
             disabled={saving}
-            onClick={onClose}
+            onClick={handleClose}
             type="button"
           >
             <X className="size-4"/>
@@ -125,18 +177,33 @@ export function EditEventDialog({
           </label>
 
           <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_160px]">
-            <label className="min-w-0">
-              <span className="form-label">
-                {t('createEventDialog.dateAndTime')}
-              </span>
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="form-label">
+                  {t('createEventDialog.date')}
+                </span>
 
-              <input
-                className="form-input datetime-input scheme-dark"
-                defaultValue={toLocalDateTime(event.scheduled_at)}
-                name="scheduled_at"
-                type="datetime-local"
-              />
-            </label>
+                <input
+                  className="form-input"
+                  defaultValue={toLocalDateInput(event.scheduled_at)}
+                  name="scheduled_date"
+                  type="date"
+                />
+              </label>
+
+              <label className="block">
+                <span className="form-label">
+                  {t('createEventDialog.time')}
+                </span>
+
+                <input
+                  className="form-input"
+                  defaultValue={toLocalTimeInput(event.scheduled_at)}
+                  name="scheduled_time"
+                  type="time"
+                />
+              </label>
+            </div>
 
             <label className="min-w-0">
               <span className="form-label">
@@ -247,9 +314,9 @@ export function EditEventDialog({
             </label>
           </div>
 
-          {error && (
+          {(formError || error) && (
             <p className="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-xs text-red-300">
-              {error}
+              {formError || error}
             </p>
           )}
 
@@ -257,7 +324,7 @@ export function EditEventDialog({
             <Button
               className="rounded-full text-white/50 hover:bg-white/10 hover:text-white"
               disabled={saving}
-              onClick={onClose}
+              onClick={handleClose}
               type="button"
               variant="ghost"
             >

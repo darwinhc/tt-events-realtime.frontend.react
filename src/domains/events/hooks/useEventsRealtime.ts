@@ -1,72 +1,62 @@
-import { useEffect, useRef } from 'react'
+import {useEffect} from 'react'
 
-import { EventsRealtimeClient } from '@/domains/events/realtime/events-realtime-client'
-import { parseRealtimeNotification } from '@/domains/events/realtime/events-realtime-message'
-import { applyRealtimeNotification } from '@/domains/events/realtime/events-realtime-reducer'
-import type { UseEventsRealtimeOptions } from '@/domains/events/types/events-realtime.types.ts'
-import { eventsService } from '@/services/events/events.service.ts'
+import {EventsRealtimeClient} from '@/domains/events/realtime/events-realtime-client'
+import {eventsService} from '@/domains/events/services/events.service'
+import type {UseEventsRealtimeOptions} from '@/domains/events/types/events-realtime.types'
 
 export function useEventsRealtime({
-  events,
-  joinersByEvent,
-  loadEvents,
-  loadEventJoiners,
-  setEvents,
-  setJoinersByEvent,
-  setLive,
-}: UseEventsRealtimeOptions) {
-  const eventsRef = useRef(events)
-  const joinersByEventRef = useRef(joinersByEvent)
-
-  useEffect(() => {
-    eventsRef.current = events
-  }, [events])
-
-  useEffect(() => {
-    joinersByEventRef.current = joinersByEvent
-  }, [joinersByEvent])
-
+                                    loadEvents,
+                                    loadEventJoiners,
+                                    dispatch,
+                                  }: UseEventsRealtimeOptions) {
   useEffect(() => {
     const client = new EventsRealtimeClient({
       getUrl: eventsService.getWebSocketUrl,
-      onOpen: ({ shouldRefresh }) => {
-        setLive(true)
+
+      onOpen: ({shouldRefresh}) => {
+        dispatch({
+          type: 'liveChanged',
+          payload: {
+            live: true,
+          },
+        })
 
         if (shouldRefresh) {
           void loadEvents()
         }
       },
+
       onClose: () => {
-        setLive(false)
-      },
-      onMessage: (message) => {
-        const notification = parseRealtimeNotification(message)
-
-        if (!notification) {
-          void loadEvents()
-          return
-        }
-
-        const result = applyRealtimeNotification(
-          {
-            events: eventsRef.current,
-            joinersByEvent: joinersByEventRef.current,
+        dispatch({
+          type: 'liveChanged',
+          payload: {
+            live: false,
           },
-          notification,
-        )
+        })
+      },
 
-        if (!result.handled) {
+      onInvalidMessage: () => {
+        // ignore
+      },
+
+      onDomainEvent: (event) => {
+        dispatch({
+          type: 'realtimeDomainEventReceived',
+          payload: {
+            event,
+          },
+        })
+
+        if (event.type === 'event.created') {
           void loadEvents()
           return
         }
 
-        eventsRef.current = result.events
-        joinersByEventRef.current = result.joinersByEvent
-        setEvents(result.events)
-        setJoinersByEvent(result.joinersByEvent)
-
-        if (result.joinersReloadEventId !== null) {
-          void loadEventJoiners(result.joinersReloadEventId)
+        if (
+          (event.type === 'joiner.joined' || event.type === 'joiner.left') &&
+          event.joiner === null
+        ) {
+          void loadEventJoiners(event.eventId)
         }
       },
     })
@@ -76,11 +66,5 @@ export function useEventsRealtime({
     return () => {
       client.stop()
     }
-  }, [
-    loadEventJoiners,
-    loadEvents,
-    setEvents,
-    setJoinersByEvent,
-    setLive,
-  ])
+  }, [dispatch, loadEventJoiners, loadEvents])
 }

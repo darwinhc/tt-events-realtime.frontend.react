@@ -1,10 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
-import {
-  getEventTimingStatus,
-  getLocationDisplay,
-  isEventCompleted,
-} from '@/domains/events/utils/event-formatters'
+import {getEventTimingStatus, getLocationDisplay, isEventCompleted,} from '@/domains/events/utils/event-formatters'
 import {activeEvent} from '@/test/fixtures'
 
 describe('event formatters', () => {

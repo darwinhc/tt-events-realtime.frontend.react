@@ -4,15 +4,16 @@ import {beforeEach, describe, expect, it, type Mocked, vi} from 'vitest'
 
 import {EventsScreen} from '@/domains/events/components/EventsScreen'
 import type {CreateEventInput, EventDetails,} from '@/domains/events/types/event.types'
-import {eventsService} from '@/services/events/events.service'
+import {eventsService} from '@/domains/events/services/events.service.ts'
 import {activeEvent, canceledEvent, currentUser, joiner,} from '@/test/fixtures'
 
-vi.mock('@/services/events/events.service', () => ({
+vi.mock('@/domains/events/services/events.service.ts', () => ({
   eventsService: {
     cancel: vi.fn(),
     create: vi.fn(),
     getEvents: vi.fn(),
     getJoiners: vi.fn(),
+    getJoinersForEvents: vi.fn(),
     getWebSocketUrl: vi.fn(() => 'ws://localhost/ws/events'),
     join: vi.fn(),
     leave: vi.fn(),
@@ -65,6 +66,7 @@ describe('EventsScreen', () => {
   beforeEach(() => {
     Object.values(serviceMocks).forEach((mock) => mock.mockClear())
     serviceMocks.getWebSocketUrl.mockReturnValue('ws://localhost/ws/events')
+    serviceMocks.getJoinersForEvents.mockResolvedValue([])
     MockWebSocket.instances = []
     Object.defineProperty(globalThis, 'WebSocket', {
       configurable: true,
@@ -153,8 +155,12 @@ describe('EventsScreen', () => {
       'Community Dinner',
     )
     await user.type(
-      screen.getByLabelText('Date and time'),
-      '2026-08-15T19:00',
+      screen.getByLabelText('Date'),
+      '2026-08-15',
+    )
+    await user.type(
+      screen.getByLabelText('Time'),
+      '19:00',
     )
     await user.type(screen.getByRole('textbox', {name: 'Venue'}), 'Garden Hall')
     await user.selectOptions(screen.getByRole('combobox', {name: 'Country'}), 'DE')
@@ -337,8 +343,8 @@ describe('EventsScreen', () => {
       event_id: canceledEvent.id,
     }
     serviceMocks.getEvents.mockResolvedValue([activeEvent, canceledEvent])
-    serviceMocks.getJoiners.mockImplementation(async (eventId) =>
-      eventId === canceledEvent.id ? [canceledJoiner] : [],
+    serviceMocks.getJoinersForEvents.mockImplementation(async (eventIds) =>
+      eventIds.includes(canceledEvent.id) ? [canceledJoiner] : [],
     )
 
     render(<EventsScreen/>)
@@ -369,11 +375,11 @@ describe('EventsScreen', () => {
       expect(screen.getAllByText(activeEvent.title)).toHaveLength(2),
     )
     await waitFor(() =>
-      expect(serviceMocks.getJoiners).toHaveBeenCalledWith(activeEvent.id),
+      expect(serviceMocks.getJoinersForEvents).toHaveBeenCalledWith([activeEvent.id]),
     )
     await enterUser()
     await waitFor(() =>
-      expect(serviceMocks.getJoiners).toHaveBeenCalledWith(canceledEvent.id),
+      expect(serviceMocks.getJoinersForEvents).toHaveBeenCalledWith([canceledEvent.id]),
     )
     await waitFor(() => expect(MockWebSocket.instances).toHaveLength(1))
 
@@ -383,13 +389,13 @@ describe('EventsScreen', () => {
 
     expect(MockWebSocket.instances).toHaveLength(1)
     expect(
-      serviceMocks.getJoiners.mock.calls.filter(
-        ([eventId]) => eventId === activeEvent.id,
+      serviceMocks.getJoinersForEvents.mock.calls.filter(
+        ([[eventId]]) => eventId === activeEvent.id,
       ),
     ).toHaveLength(1)
     expect(
-      serviceMocks.getJoiners.mock.calls.filter(
-        ([eventId]) => eventId === canceledEvent.id,
+      serviceMocks.getJoinersForEvents.mock.calls.filter(
+        ([[eventId]]) => eventId === canceledEvent.id,
       ),
     ).toHaveLength(1)
   })

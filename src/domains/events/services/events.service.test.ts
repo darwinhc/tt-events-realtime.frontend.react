@@ -1,13 +1,14 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
-import type {CreateEventInput, UpdateEventInput, UpdateLocationInput,} from '@/domains/events/types/event.types'
-import {eventsService} from '@/services/events/events.service'
-import {activeEvent, currentUser, joiner} from '@/test/fixtures'
+import type {CreateEventInput, UpdateEventInput, UpdateLocationInput,} from '@/domains/events/types/event.types.ts'
+import {eventsService} from '@/domains/events/services/events.service.ts'
+import {activeEvent, currentUser, joiner} from '@/test/fixtures.ts'
 
 function jsonResponse(body: unknown, ok = true, status = 200) {
   return {
     ok,
     status,
+    headers: new Headers({'content-type': 'application/json'}),
     json: vi.fn<() => Promise<unknown>>().mockResolvedValue(body),
   } as unknown as Response
 }
@@ -140,9 +141,14 @@ describe('eventsService', () => {
     )
 
     for (const callNumber of [1, 2, 3, 4, 5, 6, 7]) {
-      const headers = fetchMock.mock.calls[callNumber - 1][1]?.headers as Headers
+      const options = fetchMock.mock.calls[callNumber - 1][1]
+      const headers = options?.headers as Headers
+
       expect(headers.get('Authorization')).toBe('Bearer Sofia Martinez')
-      expect(headers.get('Content-Type')).toBe('application/json')
+
+      if (options && 'body' in options && options.body !== undefined) {
+        expect(headers.get('Content-Type')).toBe('application/json')
+      }
     }
   })
 
@@ -160,6 +166,7 @@ describe('eventsService', () => {
         {
           ok: false,
           status: 500,
+          headers: new Headers({'content-type': 'application/json'}),
           json: vi
             .fn<() => Promise<unknown>>()
             .mockRejectedValue(new Error('invalid json')),
