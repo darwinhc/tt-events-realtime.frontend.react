@@ -26,10 +26,17 @@ export const de = {
     city: 'Stadt',
     cityPlaceholder: 'Berlin',
     address: 'Adresse',
+    date: 'Datum',
+    time: 'Uhrzeit',
     addressPlaceholder: 'Lohmühlenstraße 65',
     postalCode: 'Postleitzahl',
     postalCodePlaceholder: '12435',
+    errors: {
+      eventMustNotEndInPast: 'Die Veranstaltung darf nicht in der Vergangenheit enden.',
+      deletionDateMustBeInFuture: 'Das Löschdatum muss in der Zukunft liegen.',
+    },
   },
+
   events: {
     header: {
       title: 'Events in Echtzeit',
@@ -132,6 +139,9 @@ export const de = {
       empty: 'Noch hat niemand teilgenommen.',
     },
   },
+  formatters: {
+    TBD: 'Uhrzeit noch nicht festgelegt',
+  },
   eventList: {
     empty: {
       title: 'Noch keine Events',
@@ -159,6 +169,9 @@ export const de = {
     saveChanges: 'Änderungen speichern',
     validation: {
       locationRequired: 'Gib einen Veranstaltungsort oder eine Adresse ein.',
+    },
+    errors: {
+      eventMustNotEndInPast: 'Die Veranstaltung darf nicht in der Vergangenheit enden.',
     },
   }
 }

@@ -14,6 +14,10 @@ export const en = {
     tryAgain: 'Try again',
     notConnected: 'Not connected',
     liveSync: 'Live sync',
+    notAvailable: 'Not available',
+  },
+  formatters: {
+    TBD: "Time to be defined",
   },
   createEventDialog: {
     title: 'Create your event',
@@ -23,6 +27,8 @@ export const en = {
     dateAndTime: 'Date and time',
     durationInHours: 'Duration in hours',
     venue: 'Venue',
+    date: 'Date',
+    time: 'Time',
     venuePlaceholder: 'Factory Berlin',
     country: 'Country',
     selectCountry: 'Select a country',
@@ -32,6 +38,10 @@ export const en = {
     addressPlaceholder: 'Lohmühlenstraße 65',
     postalCode: 'Postal code',
     postalCodePlaceholder: '12435',
+    errors: {
+      eventMustNotEndInPast: 'The event cannot end in the past.',
+      deletionDateMustBeInFuture: 'The deletion date must be in the future.',
+    },
   },
   events: {
     sidebar: {
@@ -156,6 +166,9 @@ export const en = {
     title: 'Edit event',
     description: 'Update the event details and its current location.',
     currentLocation: 'Current location',
+    errors: {
+      eventMustNotEndInPast: 'The event cannot end in the past.',
+    },
     sharedLocationWarning:
       'Updating a shared location also updates other events using it.',
     noCountrySelected: 'No country selected',
