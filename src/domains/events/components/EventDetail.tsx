@@ -4,10 +4,7 @@ import {useTranslation} from 'react-i18next'
 import {Button} from '@/components/ui/button'
 import {Card, CardContent} from '@/components/ui/card'
 import type {AppUser, EventDetails, EventJoiner,} from '@/domains/events/types/event.types'
-import {
-  getEventTimingStatus,
-  getLocationDisplay,
-} from '@/domains/events/utils/event-formatters'
+import {getEventTimingStatus, getLocationDisplay,} from '@/domains/events/utils/event-formatters'
 import {useEventFormatters} from "@/domains/events/hooks/useEventFormatters.ts";
 
 interface EventDetailProps {
@@ -23,16 +20,16 @@ interface EventDetailProps {
 }
 
 export function EventDetail({
-    event,
-    joiners,
-    currentUser,
-    busy,
-    now,
-    onJoinToggle,
-    onCancel,
-    onEdit,
-    onRestore,
-  }: EventDetailProps) {
+                              event,
+                              joiners,
+                              currentUser,
+                              busy,
+                              now,
+                              onJoinToggle,
+                              onCancel,
+                              onEdit,
+                              onRestore,
+                            }: EventDetailProps) {
   const {t} = useTranslation()
 
   const {formatEventDate, formatDuration, formatTime} = useEventFormatters()

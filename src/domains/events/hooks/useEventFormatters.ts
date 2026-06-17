@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+import {useMemo} from 'react'
+import {useTranslation} from 'react-i18next'
 
 type DateInput = string | number | Date | null | undefined
 
@@ -49,8 +49,7 @@ function parseDate(value: DateInput): Date | null {
 }
 
 export function useEventFormatters(): EventFormatters {
-  const { i18n, t } = useTranslation()
-
+  const {i18n, t} = useTranslation()
 
 
   return useMemo(() => {
@@ -100,7 +99,7 @@ export function useEventFormatters(): EventFormatters {
         const date = parseDate(value)
 
         if (date === null) {
-          return t('common.notAvailable', 'N/A')
+          return t('formatters.TBD', 'N/A')
         }
 
         return timeFormatter.format(date)
@@ -112,7 +111,7 @@ export function useEventFormatters(): EventFormatters {
           durationInMinutes === undefined ||
           Number.isNaN(durationInMinutes)
         ) {
-          return t('common.notAvailable', 'N/A')
+          return t('formatters.TBD', 'N/A')
         }
 
         if (durationInMinutes < 60) {

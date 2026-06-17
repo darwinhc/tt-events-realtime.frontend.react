@@ -25,7 +25,7 @@ export function EventList({
                             emptyDescription,
                           }: EventListProps) {
   const {t} = useTranslation()
-  const { formatEventDate } = useEventFormatters()
+  const {formatEventDate} = useEventFormatters()
   const resolvedEmptyTitle = emptyTitle ?? t('eventList.empty.title')
   const resolvedEmptyDescription =
     emptyDescription ?? t('eventList.empty.description')
