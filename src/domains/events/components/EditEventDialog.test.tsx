@@ -4,6 +4,7 @@ import {describe, expect, it, vi} from 'vitest'
 
 import {EditEventDialog} from '@/domains/events/components/EditEventDialog'
 import {activeEvent, canceledEvent} from '@/test/fixtures'
+import {useFixtureClock} from '@/test/clock'
 
 const baseProps = {
   error: null,
@@ -15,6 +16,8 @@ const baseProps = {
 }
 
 describe('EditEventDialog', () => {
+  useFixtureClock()
+
   it('does not render while closed', () => {
     render(<EditEventDialog {...baseProps} open={false}/>)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

@@ -4,8 +4,11 @@ import {describe, expect, it, vi} from 'vitest'
 
 import {CreateEventDialog} from '@/domains/events/components/CreateEventDialog'
 import {currentUser} from '@/test/fixtures'
+import {useFixtureClock} from '@/test/clock'
 
 describe('CreateEventDialog', () => {
+  useFixtureClock()
+
   it('renders nothing while closed', () => {
     const {container} = render(
       <CreateEventDialog

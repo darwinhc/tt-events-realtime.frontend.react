@@ -36,7 +36,9 @@ export function useEventsRealtime({
       },
 
       onInvalidMessage: () => {
-        // ignore
+        // A notification we cannot read may still mean something changed:
+        // fall back to the API, which is the source of truth.
+        void loadEvents()
       },
 
       onDomainEvent: (event) => {

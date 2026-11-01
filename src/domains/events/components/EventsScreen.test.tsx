@@ -6,6 +6,7 @@ import {EventsScreen} from '@/domains/events/components/EventsScreen'
 import type {CreateEventInput, EventDetails,} from '@/domains/events/types/event.types'
 import {eventsService} from '@/domains/events/services/events.service.ts'
 import {activeEvent, canceledEvent, currentUser, joiner,} from '@/test/fixtures'
+import {useFixtureClock} from '@/test/clock'
 
 vi.mock('@/domains/events/services/events.service.ts', () => ({
   eventsService: {
@@ -63,6 +64,8 @@ async function renderLoadedScreen(events: EventDetails[] = [activeEvent]) {
 }
 
 describe('EventsScreen', () => {
+  useFixtureClock()
+
   beforeEach(() => {
     Object.values(serviceMocks).forEach((mock) => mock.mockClear())
     serviceMocks.getWebSocketUrl.mockReturnValue('ws://localhost/ws/events')
